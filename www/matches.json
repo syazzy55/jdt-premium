@@ -25,16 +25,9 @@
       "status": "notstarted"
     },
     {
-      "date": "2026-12-10",
-      "opponent": "Shan United",
-      "competition": "Shopee Cup",
-      "venue": "Home",
-      "time": "20:00"
-    },
-    {
       "id": 1047302,
-      "date": "2026-12-11",
-      "time": "04:00",
+      "date": "2026-12-10",
+      "time": "20:00",
       "opponent": "Shan United",
       "venue": "Home",
       "competition": "Shopee Cup",
@@ -53,8 +46,8 @@
     },
     {
       "id": 1284367,
-      "date": "2026-12-18",
-      "time": "04:00",
+      "date": "2026-12-17",
+      "time": "",
       "opponent": "Persib Bandung",
       "venue": "Away",
       "competition": "Shopee Cup",
