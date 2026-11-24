@@ -1,0 +1,27 @@
+name: Update JDT match data
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0,14 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: jdt-match-data
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests beautifulsoup4
+      - run: python scripts/update_matches.py
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add www/matches.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh JDT match data'
+            git push
+          fi
