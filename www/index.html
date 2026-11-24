@@ -172,7 +172,7 @@ function team(name){
 const short=esc(name.split(' ').map(x=>x[0]).join('').slice(0,3));
 const file=logos[name];
 return `<div class="team">
-${file?`<img src="logos/${file}" alt="${esc(name)}"
+${file?`<img src="logos/${file}" alt="${esc(name)}" ${file==='klcity.jpeg'?'style="border-radius:50%;"':''}
 onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
 <div class="placeholder" style="display:none">${short}</div>`
 :`<div class="placeholder">${short}</div>`}
