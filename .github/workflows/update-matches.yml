@@ -7,31 +7,22 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Test API access and season coverage
-        env:
-          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+      - name: Test ESPN coverage
         run: |
-          python - <<'PY'
-          import os,json,urllib.request,urllib.parse
-          key=os.environ['API_FOOTBALL_KEY']
-          if not key: raise SystemExit('Missing API secret')
-          def get(endpoint,params):
-              url='https://v3.football.api-sports.io/'+endpoint+'?'+urllib.parse.urlencode(params)
-              req=urllib.request.Request(url,headers={'x-apisports-key':key})
-              with urllib.request.urlopen(req,timeout=30) as r:
-                  d=json.load(r)
-              if d.get('errors'): raise SystemExit(str(d['errors']))
-              return d['response']
-          teams=get('teams',{'search':'Johor'})
-          for t in teams:
-              print('Team:',t['team']['id'],t['team']['name'])
-          candidates=[t['team'] for t in teams if 'darul' in t['team']['name'].lower() and not any(x in t['team']['name'].lower() for x in [' ii',' u23',' u21'])]
-          if len(candidates)!=1: raise SystemExit('Team selection requires review')
-          fixtures=get('fixtures',{'team':candidates[0]['id'],'season':2026})
-          print('Season 2026 fixtures:',len(fixtures))
-          for name in sorted({f['league']['name'] for f in fixtures}): print('Competition:',name)
-          if not fixtures: raise SystemExit('No fixtures returned')
+          python3 - <<'PY'
+          import json, urllib.request
+          found=0
+          for league in ['mys.1','afc.champions','mys.fa','mys.cup','asean.club']:
+              try:
+                  url='https://site.api.espn.com/apis/site/v2/sports/soccer/'+league+'/scoreboard?dates=20260801-20270531&limit=1000'
+                  with urllib.request.urlopen(url,timeout=30) as r:
+                      data=json.load(r)
+                  events=data.get('events',[])
+                  matches=[e for e in events if 'johor' in json.dumps(e.get('competitions',[])).lower()]
+                  print(league, 'events:',len(events),'JDT:',len(matches))
+                  for e in matches[:3]: print(e.get('date'),e.get('name'))
+                  found+=len(matches)
+              except Exception as e:
+                  print(league,type(e).__name__,str(e))
+          if not found: raise SystemExit('No JDT records verified')
           PY
