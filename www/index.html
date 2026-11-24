@@ -173,7 +173,7 @@ timeZone:'Asia/Kuala_Lumpur'
 
 function upcoming(){
 return data.fixtures.filter(m=>
-new Date(m.date+'T'+m.time+':00+08:00')>new Date()
+(m.time ? new Date(m.date+'T'+m.time+':00+08:00') : new Date(m.date+'T23:59:59+08:00'))>new Date()
 ).sort((a,b)=>
 (a.date+a.time).localeCompare(b.date+b.time));
 }
@@ -201,7 +201,7 @@ ${team(away?'JDT':m.opponent)}
 </div>
 <div class="center">
 ${dateText(m.date)}
-${result?'':' • '+esc(m.time)+' MYT'}
+${result?'':' • '+(m.time?esc(m.time)+' MYT':'Masa belum disahkan')}
 <p class="muted">${away?'AWAY':'HOME'}</p>
 ${status}
 </div>
@@ -229,8 +229,8 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 <h2>Keputusan terkini</h2>
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
-Data asas: ${esc(data.updated)}<br>
-JDT Premium v1.0<br>
+${esc(sourceLabel)}: ${esc(data.updated)}<br>
+JDT Premium v1.1<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
@@ -254,7 +254,7 @@ ${filter===c?'selected':''}>${esc(c)}</option>`).join('')}
 </select>
 ${filtered.map(m=>matchCard(m,result)).join('')
 ||'<div class="card">Tiada perlawanan</div>'}
-<p class="muted">Data asas: ${esc(data.updated)}.
+<p class="muted">${esc(sourceLabel)}: ${esc(data.updated)}.
 Jadual tertakluk kepada perubahan.</p>`;
 document.getElementById('competition').onchange=e=>
 showMatches(type,e.target.value);
@@ -287,15 +287,22 @@ tersimpan dalam aplikasi, bukan keseluruhan musim.</p>`;
 window.scrollTo(0,0);
 }
 
+const remoteData='https://raw.githubusercontent.com/syazzy55/jdt-premium/main/www/matches.json';
+let sourceLabel='Data dalam APK';
+function validData(d){return d&&Array.isArray(d.fixtures)&&Array.isArray(d.results)&&d.fixtures.every(m=>typeof m.date==='string'&&typeof m.opponent==='string')&&d.results.every(m=>typeof m.date==='string'&&typeof m.opponent==='string'&&Number.isFinite(m.jdtScore)&&Number.isFinite(m.opponentScore));}
+async function readData(url,signal){const response=await fetch(url,{cache:'no-store',signal});if(!response.ok)throw Error('Data gagal dimuatkan');const d=await response.json();if(!validData(d))throw Error('Data tidak sah');return d;}
 async function load(){
+const controller=new AbortController();
+const timeout=setTimeout(()=>controller.abort(),8000);
 try{
-const response=await fetch('matches.json',{cache:'no-store'});
-if(!response.ok)throw new Error('Data gagal dimuatkan');
-data=await response.json();
-home();
+data=await readData(remoteData+'?t='+Date.now(),controller.signal);
+sourceLabel='Data GitHub dalam talian';
+try{localStorage.setItem('jdtMatches',JSON.stringify(data));}catch(e){}
 }catch(e){
-content.innerHTML='<div class="card">Gagal memuatkan data.<p>Sila semak matches.json.</p><button class="tile" onclick="load()">Cuba lagi</button></div>';
-}
+try{const cached=JSON.parse(localStorage.getItem('jdtMatches'));if(!validData(cached))throw Error('Tiada cache');data=cached;sourceLabel='Data simpanan luar talian';}
+catch(e){try{data=await readData('matches.json');sourceLabel='Data dalam APK';}catch(e){content.innerHTML='<div class="card">Gagal memuatkan data.<button class="tile" onclick="load()">Cuba lagi</button></div>';return;}}
+}finally{clearTimeout(timeout);}
+home();
 }
 load();
 </script>
