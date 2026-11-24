@@ -1,0 +1,17 @@
+{
+  "name": "jdt-premium",
+  "version": "1.0.0",
+  "description": "JDT Premium Match Centre",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync android",
+    "android": "cap add android"
+  },
+  "dependencies": {
+    "@capacitor/core": "7.4.3",
+    "@capacitor/android": "7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.4.3"
+  }
+}
