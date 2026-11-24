@@ -1,1 +1,56 @@
+{
+  "season": "2026/2027",
+  "team": "Johor Darul Ta'zim",
+  "timezone": "Asia/Kuala_Lumpur",
+  "updated": "2026-11-24",
+  "fixtures": [
+    {
+      "date": "2026-11-24",
+      "time": "20:15",
+      "opponent": "Ratchaburi FC",
+      "venue": "Away",
+      "competition": "ACLE"
+    },
+    {
+      "date": "2026-12-01",
+      "time": "20:15",
+      "opponent": "Daejeon Hana Citizen",
+      "venue": "Home",
+      "competition": "ACLE"
+    },
+    {
+      "date": "2026-12-06",
+      "time": "20:15",
+      "opponent": "Kuala Lumpur City",
+      "venue": "Home",
+      "competition": "Liga Super"
+    }
+  ],
+  "results": [
+    {
+      "date": "2026-11-19",
+      "opponent": "Cong An Hanoi",
+      "competition": "Shopee Cup",
+      "venue": "Away",
+      "jdtScore": 3,
+      "opponentScore": 1
+    },
+    {
+      "date": "2026-11-08",
+      "opponent": "Brunei DPMM",
+      "competition": "Piala FA",
+      "venue": "Home",
+      "jdtScore": 6,
+      "opponentScore": 1
+    },
+    {
+      "date": "2026-11-03",
+      "opponent": "Jeonbuk",
+      "competition": "ACLE",
+      "venue": "Away",
+      "jdtScore": 0,
+      "opponentScore": 2
+    }
+  ]
+}
 
