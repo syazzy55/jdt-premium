@@ -80,11 +80,13 @@ def convert(match):
         "status": match["status"]["type"]
     }
 
-    if item["status"] == "finished":
-        hs = match["homeScore"]["current"]
-        aws = match["awayScore"]["current"]
+    if item["status"] in ("finished", "inprogress", "live"):
+        hs = (match.get("homeScore") or {}).get("current")
+        aws = (match.get("awayScore") or {}).get("current")
         if hs is None or aws is None:
-            raise ValueError("Missing final score")
+            if item["status"] == "finished":
+                raise ValueError("Missing final score")
+            return item
 
         item["jdtScore"] = hs if home else aws
         item["opponentScore"] = aws if home else hs
@@ -123,7 +125,7 @@ for match in upcoming + recent:
         results[k] = item
         fixtures.pop(k, None)
 
-    elif status == "notstarted":
+    elif status in ("notstarted", "inprogress", "live"):
         if k not in results:
             fixtures[k] = item
 
