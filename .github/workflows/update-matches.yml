@@ -1,27 +1,37 @@
 name: Update JDT match data
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0,14 * * *'
 permissions:
-  contents: write
-concurrency:
-  group: jdt-match-data
+  contents: read
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install requests beautifulsoup4
-      - run: python scripts/update_matches.py
-      - run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add www/matches.json
-          if ! git diff --cached --quiet; then
-            git commit -m 'Refresh JDT match data'
-            git push
-          fi
+      - name: Test API access and season coverage
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          python - <<'PY'
+          import os,json,urllib.request,urllib.parse
+          key=os.environ['API_FOOTBALL_KEY']
+          if not key: raise SystemExit('Missing API secret')
+          def get(endpoint,params):
+              url='https://v3.football.api-sports.io/'+endpoint+'?'+urllib.parse.urlencode(params)
+              req=urllib.request.Request(url,headers={'x-apisports-key':key})
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  d=json.load(r)
+              if d.get('errors'): raise SystemExit(str(d['errors']))
+              return d['response']
+          teams=get('teams',{'search':'Johor'})
+          for t in teams:
+              print('Team:',t['team']['id'],t['team']['name'])
+          candidates=[t['team'] for t in teams if 'darul' in t['team']['name'].lower() and not any(x in t['team']['name'].lower() for x in [' ii',' u23',' u21'])]
+          if len(candidates)!=1: raise SystemExit('Team selection requires review')
+          fixtures=get('fixtures',{'team':candidates[0]['id'],'season':2026})
+          print('Season 2026 fixtures:',len(fixtures))
+          for name in sorted({f['league']['name'] for f in fixtures}): print('Competition:',name)
+          if not fixtures: raise SystemExit('No fixtures returned')
+          PY
