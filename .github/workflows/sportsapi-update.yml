@@ -1,0 +1,34 @@
+name: SportsAPI Smart Update
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test SportsAPI
+        env:
+          SPORTSAPI_KEY: ${{ secrets.SPORTSAPI_KEY }}
+        run: |
+          set -euo pipefail
+
+          for TYPE in upcoming recent; do
+            echo "Testing $TYPE fixtures..."
+
+            curl -fsS \
+              -H "Authorization: Bearer $SPORTSAPI_KEY" \
+              "https://api.sportsapi.app/v2/teams/210860/fixtures?type=$TYPE&page=0" \
+              -o "$TYPE.json"
+
+            jq -e '.data | type == "array"' "$TYPE.json" > /dev/null
+
+            echo "Total matches:"
+            jq '.data | length' "$TYPE.json"
+          done
+
+          echo "SportsAPI connection successful!"
