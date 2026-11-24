@@ -63,7 +63,7 @@ def convert(match):
         match["startTime"].replace("Z", "+00:00")
     ).astimezone(TZ)
 
-    overrides = {1047302: ("2026-12-10", "20:00"), 1284367: ("2026-12-17", "20:00")}
+    overrides = {1047302: ("2026-12-10", "20:00"), 1284367: ("2026-12-17", "")}
     league = match["league"]
 
     item = {
