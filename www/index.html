@@ -219,18 +219,25 @@ ${team(away?'JDT':m.opponent)}
 ${dateText(m.date)}
 ${result?'':' • '+(m.time?esc(m.time)+' MYT':'Masa belum disahkan')}
 <p class="muted">${away?'AWAY':'HOME'}</p>
+${m.stadium?`<p class="muted">🏟️ ${esc(m.stadium)}</p>`:''}
+${!result&&Number.isFinite(kickoff(m))&&kickoff(m)<=Date.now()?'<p class="muted">Waktu sepak mula telah berlalu • keputusan belum disahkan</p>':''}
 ${status}
 </div>
 </div>`;
 }
 
+let currentView='home', currentFilter='all', loading=false;
+function kickoff(m){return m.time?Date.parse(m.date+'T'+m.time+':00+08:00'):NaN;}
+function tick(){const el=document.getElementById('countdown');if(!el)return;const ms=Number(el.dataset.kickoff)-Date.now();if(!Number.isFinite(ms)){el.textContent='Masa belum disahkan';return;}if(ms<=0){el.textContent='Waktu sepak mula telah tiba • status belum disahkan';return;}const n=Math.floor(ms/1000);el.textContent=Math.floor(n/86400)+'h '+String(Math.floor(n/3600)%24).padStart(2,'0')+'j '+String(Math.floor(n/60)%60).padStart(2,'0')+'m '+String(n%60).padStart(2,'0')+'s';}
 function home(){
+currentView='home';
 const next=upcoming()[0];
 const latest=[...data.results].sort((a,b)=>
 b.date.localeCompare(a.date))[0];
 
 content.innerHTML=`
 <p class="tag">PERLAWANAN SETERUSNYA</p>
+${next?`<div class="card center"><small>KIRA DETIK SEPAK MULA</small><h2 id="countdown" data-kickoff="${kickoff(next)}"></h2></div>`:''}
 ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</div>'}
 <div class="grid">
 <button class="tile" onclick="showMatches('fixtures')">
@@ -246,13 +253,14 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
 ${esc(sourceLabel)}: ${esc(data.updated)}<br>
-JDT Premium v1.2<br>
+JDT Premium v1.3<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
 }
 
 function showMatches(type,filter='all'){
+currentView=type;currentFilter=filter;
 const result=type==='results';
 const list=[...data[type]].sort((a,b)=>
 result?b.date.localeCompare(a.date):
@@ -278,6 +286,7 @@ window.scrollTo(0,0);
 }
 
 function stats(){
+currentView='stats';
 const r=data.results;
 const w=r.filter(m=>m.jdtScore>m.opponentScore).length;
 const d=r.filter(m=>m.jdtScore===m.opponentScore).length;
@@ -307,7 +316,9 @@ const remoteData='https://raw.githubusercontent.com/syazzy55/jdt-premium/main/ww
 let sourceLabel='Data dalam APK';
 function validData(d){return d&&Array.isArray(d.fixtures)&&Array.isArray(d.results)&&d.fixtures.every(m=>typeof m.date==='string'&&typeof m.opponent==='string')&&d.results.every(m=>typeof m.date==='string'&&typeof m.opponent==='string'&&Number.isFinite(m.jdtScore)&&Number.isFinite(m.opponentScore));}
 async function readData(url,signal){const response=await fetch(url,{cache:'no-store',signal});if(!response.ok)throw Error('Data gagal dimuatkan');const d=await response.json();if(!validData(d))throw Error('Data tidak sah');return d;}
-async function load(){
+async function load(background=false){
+if(loading)return;loading=true;
+const before=JSON.stringify(data),previousSource=sourceLabel;
 const controller=new AbortController();
 const timeout=setTimeout(()=>controller.abort(),8000);
 try{
@@ -317,10 +328,15 @@ try{localStorage.setItem('jdtMatches',JSON.stringify(data));}catch(e){}
 }catch(e){
 try{const cached=JSON.parse(localStorage.getItem('jdtMatches'));if(!validData(cached))throw Error('Tiada cache');data=cached;sourceLabel='Data simpanan luar talian';}
 catch(e){try{data=await readData('matches.json');sourceLabel='Data dalam APK';}catch(e){content.innerHTML='<div class="card">Gagal memuatkan data.<button class="tile" onclick="load()">Cuba lagi</button></div>';return;}}
-}finally{clearTimeout(timeout);}
-home();
+}finally{clearTimeout(timeout);loading=false;}
+if(background&&before===JSON.stringify(data)&&previousSource===sourceLabel)return;
+if(background){const y=window.scrollY;if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
+tick();
 }
 load();
+setInterval(tick,1000);
+setInterval(()=>{if(!document.hidden)load(true);},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load(true);});
 </script>
 </body>
 </html>
