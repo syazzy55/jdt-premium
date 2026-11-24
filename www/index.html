@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JDT Premium</title>
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#080e1c;
+color:white;
+padding-bottom:85px
+}
+header{
+background:linear-gradient(135deg,#a90024,#102d65);
+padding:30px 15px;
+text-align:center;
+border-bottom:4px solid #ed173b
+}
+header h1{margin:10px 0;font-size:26px}
+header p{color:#dce5ff;font-size:13px}
+.logo{font-size:65px}
+main{padding:16px}
+.card{
+background:#14223c;
+border:1px solid #263d61;
+border-radius:16px;
+padding:20px;
+margin-bottom:16px
+}
+h2{font-size:18px}
+.caption{color:#9baecb;font-size:12px}
+.teams{
+display:flex;
+justify-content:space-around;
+align-items:center;
+text-align:center;
+padding:22px 0
+}
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px
+}
+.tile{
+background:#14223c;
+border-radius:14px;
+padding:25px 10px;
+text-align:center;
+color:white;
+border:1px solid #263d61;
+font-size:16px
+}
+nav{
+position:fixed;
+bottom:0;
+width:100%;
+background:#101c32;
+display:flex;
+justify-content:space-around;
+padding:16px 0;
+border-top:2px solid #e31837
+}
+nav button{
+background:none;
+border:none;
+color:white;
+font-size:12px
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">🐯</div>
+<h1>JDT PREMIUM</h1>
+<p>MATCH CENTRE • 2026/2027</p>
+<p>LUASKAN KUASAMU JOHOR</p>
+</header>
+
+<main>
+<div class="card" id="content">
+<div class="caption">PERLAWANAN SETERUSNYA</div>
+<h2>AFC Champions League Elite</h2>
+<div class="teams">
+<div>🇹🇭<br>Ratchaburi</div>
+<strong>VS</strong>
+<div>🐯<br>JDT</div>
+</div>
+<center>24 NOV 2026 • 8:15 PM</center>
+</div>
+
+<div class="grid">
+<button class="tile" onclick="show('Jadual')">
+📅<br><br>Jadual
+</button>
+<button class="tile" onclick="show('Keputusan')">
+🏆<br><br>Keputusan
+</button>
+<button class="tile" onclick="show('Statistik')">
+📊<br><br>Statistik
+</button>
+<button class="tile" onclick="show('Berita JDT')">
+📰<br><br>Berita JDT
+</button>
+</div>
+
+<div class="card" style="margin-top:16px">
+<h2>Pertandingan</h2>
+<p>🇲🇾 Liga Super Malaysia</p>
+<p>🏆 Piala FA Malaysia</p>
+<p>🏆 Piala Malaysia</p>
+<p>🌏 AFC Champions League Elite</p>
+<p>🌏 ASEAN Shopee Cup</p>
+</div>
+
+<p class="caption" style="text-align:center">
+JDT Premium v1.0 • Aplikasi penyokong tidak rasmi
+</p>
+</main>
+
+<nav>
+<button onclick="location.reload()">🏠<br>Home</button>
+<button onclick="show('Jadual')">📅<br>Jadual</button>
+<button onclick="show('Keputusan')">🏆<br>Keputusan</button>
+<button onclick="show('Tetapan')">⚙️<br>Tetapan</button>
+</nav>
+
+<script>
+function show(page){
+document.getElementById('content').innerHTML =
+'<h2>'+page+'</h2><p>Modul belum disambungkan kepada sumber data.</p>';
+window.scrollTo(0,0);
+}
+</script>
+
+</body>
+</html>
