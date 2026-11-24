@@ -24,6 +24,132 @@
       "opponent": "Kuala Lumpur City",
       "venue": "Home",
       "competition": "Liga Super"
+    },
+    {
+      "date": "2026-12-10",
+      "opponent": "Shan United",
+      "competition": "Shopee Cup",
+      "venue": "Home",
+      "time": "20:00"
+    },
+    {
+      "date": "2026-12-13",
+      "opponent": "Penang FC",
+      "competition": "Liga Super",
+      "venue": "Away",
+      "time": "17:00"
+    },
+    {
+      "date": "2026-12-20",
+      "opponent": "Sabah FC",
+      "competition": "Liga Super",
+      "venue": "Home",
+      "time": "17:30"
+    },
+    {
+      "date": "2026-12-23",
+      "opponent": "Selangor FC",
+      "competition": "Liga Super",
+      "venue": "Home",
+      "time": "20:15"
+    },
+    {
+      "date": "2026-12-30",
+      "opponent": "Melaka FC",
+      "competition": "Liga Super",
+      "venue": "Away",
+      "time": "21:00"
+    },
+    {
+      "date": "2027-01-09",
+      "opponent": "Kelantan Red Warrior",
+      "venue": "Away",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-01-26",
+      "opponent": "Kuching City",
+      "venue": "Away",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-02-03",
+      "opponent": "Sabah FC",
+      "venue": "Away",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-02-09",
+      "opponent": "Newcastle Jets",
+      "venue": "Away",
+      "competition": "ACLE",
+      "time": "15:45"
+    },
+    {
+      "date": "2027-02-16",
+      "opponent": "Cong An Hanoi",
+      "venue": "Home",
+      "competition": "ACLE",
+      "time": "18:00"
+    },
+    {
+      "date": "2027-02-21",
+      "opponent": "Brunei DPMM",
+      "venue": "Home",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-03-21",
+      "opponent": "Negeri Sembilan",
+      "venue": "Away",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-04-04",
+      "opponent": "Terengganu FC",
+      "venue": "Home",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-04-20",
+      "opponent": "Kuala Lumpur City",
+      "venue": "Away",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-05-04",
+      "opponent": "Penang FC",
+      "venue": "Home",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-05-08",
+      "opponent": "Star City",
+      "venue": "Away",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-05-14",
+      "opponent": "Selangor FC",
+      "venue": "Away",
+      "competition": "Liga Super",
+      "time": ""
+    },
+    {
+      "date": "2027-05-20",
+      "opponent": "Melaka FC",
+      "venue": "Home",
+      "competition": "Liga Super",
+      "time": ""
     }
   ],
   "results": [
@@ -50,7 +176,131 @@
       "venue": "Away",
       "jdtScore": 0,
       "opponentScore": 2
+    },
+    {
+      "date": "2026-10-27",
+      "opponent": "Port FC",
+      "competition": "ACLE",
+      "venue": "Home",
+      "jdtScore": 3,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-10-23",
+      "opponent": "Brunei DPMM",
+      "competition": "Piala FA",
+      "venue": "Away",
+      "jdtScore": 2,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-10-18",
+      "opponent": "Terengganu FC",
+      "competition": "Liga Super",
+      "venue": "Away",
+      "jdtScore": 3,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-10-13",
+      "opponent": "Pohang Steelers",
+      "competition": "ACLE",
+      "venue": "Away",
+      "jdtScore": 2,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-10-09",
+      "opponent": "Penang FC",
+      "competition": "Piala FA",
+      "venue": "Home",
+      "jdtScore": 4,
+      "opponentScore": 1
+    },
+    {
+      "date": "2026-10-08",
+      "opponent": "Svay Rieng",
+      "competition": "Shopee Cup",
+      "venue": "Home",
+      "jdtScore": 6,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-09-20",
+      "opponent": "Penang FC",
+      "competition": "Piala FA",
+      "venue": "Away",
+      "jdtScore": 7,
+      "opponentScore": 2
+    },
+    {
+      "date": "2026-09-15",
+      "opponent": "Buriram United",
+      "competition": "ACLE",
+      "venue": "Home",
+      "jdtScore": 1,
+      "opponentScore": 1
+    },
+    {
+      "date": "2026-09-11",
+      "opponent": "Negeri Sembilan",
+      "competition": "Liga Super",
+      "venue": "Home",
+      "jdtScore": 3,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-09-08",
+      "opponent": "UM-Damansara United",
+      "competition": "Piala FA",
+      "venue": "Home",
+      "jdtScore": 10,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-09-04",
+      "opponent": "Brunei DPMM",
+      "competition": "Liga Super",
+      "venue": "Home",
+      "jdtScore": 3,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-09-01",
+      "opponent": "UM-Damansara United",
+      "competition": "Piala FA",
+      "venue": "Away",
+      "jdtScore": 4,
+      "opponentScore": 1
+    },
+    {
+      "date": "2026-08-29",
+      "opponent": "Star City",
+      "competition": "Liga Super",
+      "venue": "Home",
+      "jdtScore": 7,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-08-26",
+      "opponent": "Kelantan Red Warrior",
+      "competition": "Liga Super",
+      "venue": "Home",
+      "jdtScore": 9,
+      "opponentScore": 0
+    },
+    {
+      "date": "2026-08-21",
+      "opponent": "Kuching City",
+      "competition": "Liga Super",
+      "venue": "Home",
+      "jdtScore": 3,
+      "opponentScore": 0
     }
+  ],
+  "sources": [
+    "https://johorsoutherntigers.my/calendar/2026-27-jdt-fc-calendar-results/",
+    "https://www.goal.com/en-my/team/johor-darul-tazim/fixtures-results/9bq1u6a6r5cennzu581mh2910",
+    "https://matchcalendar.football/team/johor-darul-takzim/fixtures/"
   ]
 }
-
