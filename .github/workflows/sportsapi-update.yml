@@ -4,7 +4,8 @@ name: SportsAPI Smart Update
 on:
   workflow_dispatch:
   schedule:
-    -  cron: '17 */3 * * *'
+    - cron: '17 */3 * * *'
+    - cron: '7,22,37,52 * * * *'
 
 permissions:
   contents: write
@@ -26,12 +27,39 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Check match window
+        id: window
+        env:
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          python - <<'PY'
+          import os, json
+          from datetime import datetime, timedelta
+          from zoneinfo import ZoneInfo
+          tz = ZoneInfo('Asia/Kuala_Lumpur')
+          now = datetime.now(tz)
+          data = json.load(open('www/matches.json'))
+          run = os.environ['EVENT'] == 'workflow_dispatch' or os.environ['SCHEDULE'] == '17 */3 * * *'
+          for m in data['fixtures']:
+              try:
+                  start = datetime.fromisoformat(m['date'] + 'T' + m['time']).replace(tzinfo=tz)
+              except (KeyError, ValueError, TypeError):
+                  continue
+              if start - timedelta(minutes=30) <= now <= start + timedelta(hours=3):
+                  run = True
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              print('run=' + str(run).lower(), file=f)
+          PY
+
       - name: Update JDT matches
+        if: steps.window.outputs.run == 'true'
         env:
           SPORTSAPI_KEY: ${{ secrets.SPORTSAPI_KEY }}
         run: python scripts/sportsapi-update.py
 
       - name: Save updated matches
+        if: steps.window.outputs.run == 'true'
         run: |
           git config user.name "JDT Smart Update"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
