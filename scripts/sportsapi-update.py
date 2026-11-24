@@ -63,6 +63,7 @@ def convert(match):
         match["startTime"].replace("Z", "+00:00")
     ).astimezone(TZ)
 
+    overrides = {1047302: ("2026-12-10", "20:00"), 1284367: ("2026-12-17", "20:00")}
     league = match["league"]
 
     item = {
@@ -79,6 +80,9 @@ def convert(match):
         "logo": opponent.get("image"),
         "status": match["status"]["type"]
     }
+
+    if match["id"] in overrides:
+        item["date"], item["time"] = overrides[match["id"]]
 
     if item["status"] in ("finished", "inprogress", "live"):
         hs = (match.get("homeScore") or {}).get("current")
@@ -120,6 +124,9 @@ for match in upcoming + recent:
     item = convert(match)
     k = key(item)
     status = item["status"]
+    for old_key, old in list(fixtures.items()):
+        if old_key != k and old.get("id") == item["id"]:
+            fixtures.pop(old_key)
 
     if status == "finished":
         results[k] = item
