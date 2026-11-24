@@ -126,8 +126,8 @@ letter-spacing:1px
 
 <nav>
 <button onclick="home()">🏠<br>Home</button>
-<button onclick="matches('fixtures')">📅<br>Jadual</button>
-<button onclick="matches('results')">🏆<br>Keputusan</button>
+<button onclick="showMatches('fixtures')">📅<br>Jadual</button>
+<button onclick="showMatches('results')">🏆<br>Keputusan</button>
 <button onclick="stats()">📊<br>Statistik</button>
 </nav>
 
@@ -217,9 +217,9 @@ content.innerHTML=`
 <p class="tag">PERLAWANAN SETERUSNYA</p>
 ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</div>'}
 <div class="grid">
-<button class="tile" onclick="matches('fixtures')">
+<button class="tile" onclick="showMatches('fixtures')">
 <span>📅</span><br>Jadual</button>
-<button class="tile" onclick="matches('results')">
+<button class="tile" onclick="showMatches('results')">
 <span>🏆</span><br>Keputusan</button>
 <button class="tile" onclick="stats()">
 <span>📊</span><br>Statistik</button>
@@ -236,7 +236,7 @@ Aplikasi penyokong tidak rasmi
 window.scrollTo(0,0);
 }
 
-function matches(type,filter='all'){
+function showMatches(type,filter='all'){
 const result=type==='results';
 const list=[...data[type]].sort((a,b)=>
 result?b.date.localeCompare(a.date):
@@ -257,7 +257,7 @@ ${filtered.map(m=>matchCard(m,result)).join('')
 <p class="muted">Data asas: ${esc(data.updated)}.
 Jadual tertakluk kepada perubahan.</p>`;
 document.getElementById('competition').onchange=e=>
-matches(type,e.target.value);
+showMatches(type,e.target.value);
 window.scrollTo(0,0);
 }
 
