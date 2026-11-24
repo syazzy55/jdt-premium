@@ -1,34 +1,46 @@
+
 name: SportsAPI Smart Update
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '17 */3 * * *'
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: sportsapi-update
+  cancel-in-progress: false
 
 jobs:
   update:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test SportsAPI
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Update JDT matches
         env:
           SPORTSAPI_KEY: ${{ secrets.SPORTSAPI_KEY }}
+        run: python scripts/sportsapi-update.py
+
+      - name: Save updated matches
         run: |
-          set -euo pipefail
+          git config user.name "JDT Smart Update"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          for TYPE in upcoming recent; do
-            echo "Testing $TYPE fixtures..."
+          git add www/matches.json
 
-            curl -fsS \
-              -H "Authorization: Bearer $SPORTSAPI_KEY" \
-              "https://api.sportsapi.app/v2/teams/210860/fixtures?type=$TYPE&page=0" \
-              -o "$TYPE.json"
-
-            jq -e '.data | type == "array"' "$TYPE.json" > /dev/null
-
-            echo "Total matches:"
-            jq '.data | length' "$TYPE.json"
-          done
-
-          echo "SportsAPI connection successful!"
+          if git diff --cached --quiet; then
+            echo "No changes detected"
+          else
+            git commit -m "SportsAPI: Update JDT matches"
+            git push
+          fi
