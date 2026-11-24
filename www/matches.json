@@ -2,28 +2,27 @@
   "season": "2026/2027",
   "team": "Johor Darul Ta'zim",
   "timezone": "Asia/Kuala_Lumpur",
-  "updated": "2026-11-24",
+  "updated": "2026-11-25",
   "fixtures": [
     {
-      "date": "2026-11-24",
-      "time": "20:15",
-      "opponent": "Ratchaburi FC",
-      "venue": "Away",
-      "competition": "ACLE"
-    },
-    {
+      "id": 210850,
       "date": "2026-12-01",
       "time": "20:15",
       "opponent": "Daejeon Hana Citizen",
       "venue": "Home",
-      "competition": "ACLE"
+      "competition": "ACLE",
+      "logo": "https://cdn.sportsapi.app/v2/teams/168277/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295856,
       "date": "2026-12-06",
       "time": "20:15",
       "opponent": "Kuala Lumpur City",
       "venue": "Home",
-      "competition": "Liga Super"
+      "competition": "Liga Super",
+      "logo": "https://cdn.sportsapi.app/v2/teams/229081/logo",
+      "status": "notstarted"
     },
     {
       "date": "2026-12-10",
@@ -33,116 +32,214 @@
       "time": "20:00"
     },
     {
+      "id": 1047302,
+      "date": "2026-12-11",
+      "time": "04:00",
+      "opponent": "Shan United",
+      "venue": "Home",
+      "competition": "Shopee Cup",
+      "logo": "https://cdn.sportsapi.app/v2/teams/262415/logo",
+      "status": "notstarted"
+    },
+    {
+      "id": 1295857,
       "date": "2026-12-13",
+      "time": "16:45",
       "opponent": "Penang FC",
-      "competition": "Liga Super",
       "venue": "Away",
-      "time": "17:00"
+      "competition": "Liga Super",
+      "logo": "https://cdn.sportsapi.app/v2/teams/168292/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1284367,
+      "date": "2026-12-18",
+      "time": "04:00",
+      "opponent": "Persib Bandung",
+      "venue": "Away",
+      "competition": "Shopee Cup",
+      "logo": "https://cdn.sportsapi.app/v2/teams/185961/logo",
+      "status": "notstarted"
+    },
+    {
+      "id": 1295858,
       "date": "2026-12-20",
+      "time": "17:30",
       "opponent": "Sabah FC",
-      "competition": "Liga Super",
       "venue": "Home",
-      "time": "17:30"
+      "competition": "Liga Super",
+      "logo": "https://cdn.sportsapi.app/v2/teams/218410/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1265683,
       "date": "2026-12-23",
+      "time": "20:15",
       "opponent": "Selangor FC",
-      "competition": "Liga Super",
       "venue": "Home",
-      "time": "20:15"
-    },
-    {
-      "date": "2026-12-30",
-      "opponent": "Melaka FC",
       "competition": "Liga Super",
-      "venue": "Away",
-      "time": "21:00"
+      "logo": "https://cdn.sportsapi.app/v2/teams/204622/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295859,
+      "date": "2026-12-30",
+      "time": "21:00",
+      "opponent": "Melaka FC",
+      "venue": "Away",
+      "competition": "Liga Super",
+      "logo": "https://cdn.sportsapi.app/v2/teams/182436/logo",
+      "status": "notstarted"
+    },
+    {
+      "id": 1295860,
       "date": "2027-01-09",
+      "time": "21:00",
       "opponent": "Kelantan Red Warrior",
       "venue": "Away",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/204621/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295861,
+      "date": "2027-01-16",
+      "time": "21:00",
+      "opponent": "Kuching City",
+      "venue": "Home",
+      "competition": "Piala FA",
+      "logo": "https://cdn.sportsapi.app/v2/teams/229082/logo",
+      "status": "notstarted"
+    },
+    {
+      "id": 1295862,
       "date": "2027-01-26",
+      "time": "20:15",
       "opponent": "Kuching City",
       "venue": "Away",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/229082/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295863,
       "date": "2027-02-03",
+      "time": "20:15",
       "opponent": "Sabah FC",
       "venue": "Away",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/218410/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295864,
       "date": "2027-02-09",
+      "time": "15:45",
       "opponent": "Newcastle Jets",
       "venue": "Away",
       "competition": "ACLE",
-      "time": "15:45"
+      "logo": "https://cdn.sportsapi.app/v2/teams/250818/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295865,
       "date": "2027-02-16",
+      "time": "18:00",
       "opponent": "Cong An Hanoi",
       "venue": "Home",
       "competition": "ACLE",
-      "time": "18:00"
+      "logo": "https://cdn.sportsapi.app/v2/teams/250817/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295866,
       "date": "2027-02-21",
+      "time": "22:00",
       "opponent": "Brunei DPMM",
-      "venue": "Home",
+      "venue": "Away",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/252092/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295867,
+      "date": "2027-03-05",
+      "time": "04:00",
+      "opponent": "Port FC",
+      "venue": "Away",
+      "competition": "Shopee Cup",
+      "logo": "https://cdn.sportsapi.app/v2/teams/250819/logo",
+      "status": "notstarted"
+    },
+    {
+      "id": 1295868,
       "date": "2027-03-21",
+      "time": "17:00",
       "opponent": "Negeri Sembilan",
       "venue": "Away",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/263786/logo",
+      "status": "notstarted"
     },
     {
+      "id": 876151,
+      "date": "2027-04-02",
+      "time": "04:30",
+      "opponent": "Lion City Sailors",
+      "venue": "Home",
+      "competition": "Shopee Cup",
+      "logo": "https://cdn.sportsapi.app/v2/teams/224677/logo",
+      "status": "notstarted"
+    },
+    {
+      "id": 1295869,
       "date": "2027-04-04",
+      "time": "20:15",
       "opponent": "Terengganu FC",
       "venue": "Home",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/204623/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295870,
       "date": "2027-04-20",
+      "time": "20:15",
       "opponent": "Kuala Lumpur City",
       "venue": "Away",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/229081/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295871,
       "date": "2027-05-04",
+      "time": "21:00",
       "opponent": "Penang FC",
       "venue": "Home",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/168292/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295872,
       "date": "2027-05-08",
+      "time": "21:00",
       "opponent": "Star City",
       "venue": "Away",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/218411/logo",
+      "status": "notstarted"
     },
     {
+      "id": 1295873,
       "date": "2027-05-14",
+      "time": "20:15",
       "opponent": "Selangor FC",
       "venue": "Away",
       "competition": "Liga Super",
-      "time": ""
+      "logo": "https://cdn.sportsapi.app/v2/teams/204622/logo",
+      "status": "notstarted"
     },
     {
       "date": "2027-05-20",
@@ -154,10 +251,26 @@
   ],
   "results": [
     {
-      "date": "2026-11-19",
-      "opponent": "Cong An Hanoi",
-      "competition": "Shopee Cup",
+      "id": 1122601,
+      "date": "2026-11-24",
+      "time": "20:15",
+      "opponent": "Ratchaburi FC",
       "venue": "Away",
+      "competition": "ACLE",
+      "logo": "https://cdn.sportsapi.app/v2/teams/250820/logo",
+      "status": "finished",
+      "jdtScore": 1,
+      "opponentScore": 1
+    },
+    {
+      "id": 860570,
+      "date": "2026-11-19",
+      "time": "20:30",
+      "opponent": "Cong An Hanoi",
+      "venue": "Away",
+      "competition": "Shopee Cup",
+      "logo": "https://cdn.sportsapi.app/v2/teams/250817/logo",
+      "status": "finished",
       "jdtScore": 3,
       "opponentScore": 1
     },
@@ -301,6 +414,7 @@
   "sources": [
     "https://johorsoutherntigers.my/calendar/2026-27-jdt-fc-calendar-results/",
     "https://www.goal.com/en-my/team/johor-darul-tazim/fixtures-results/9bq1u6a6r5cennzu581mh2910",
-    "https://matchcalendar.football/team/johor-darul-takzim/fixtures/"
+    "https://matchcalendar.football/team/johor-darul-takzim/fixtures/",
+    "https://api.sportsapi.app/v2"
   ]
 }
