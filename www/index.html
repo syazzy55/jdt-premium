@@ -196,9 +196,13 @@ return data.fixtures.filter(m=>
 
 function matchCard(m,result=false){
 const away=m.venue==='Away';
+const live=m.status==='inprogress'||m.status==='live';
 let score='VS';
 let status='';
-if(result){
+if(live){
+if(Number.isFinite(m.jdtScore)&&Number.isFinite(m.opponentScore))score=away?m.opponentScore+' - '+m.jdtScore:m.jdtScore+' - '+m.opponentScore;
+status='<b class="loss">● LIVE • '+esc(m.liveLabel||'Sedang berlangsung')+'</b>';
+}else if(result){
 score=away?
 m.opponentScore+' - '+m.jdtScore:
 m.jdtScore+' - '+m.opponentScore;
@@ -220,7 +224,7 @@ ${dateText(m.date)}
 ${result?'':' • '+(m.time?esc(m.time)+' MYT':'Masa belum disahkan')}
 <p class="muted">${away?'AWAY':'HOME'}</p>
 ${m.stadium?`<p class="muted">🏟️ ${esc(m.stadium)}</p>`:''}
-${!result&&Number.isFinite(kickoff(m))&&kickoff(m)<=Date.now()?'<p class="muted">Waktu sepak mula telah berlalu • keputusan belum disahkan</p>':''}
+${!live&&!result&&Number.isFinite(kickoff(m))&&kickoff(m)<=Date.now()?'<p class="muted">Waktu sepak mula telah berlalu • keputusan belum disahkan</p>':''}
 ${status}
 </div>
 </div>`;
@@ -232,10 +236,12 @@ function tick(){const el=document.getElementById('countdown');if(!el)return;cons
 function home(){
 currentView='home';
 const next=upcoming()[0];
+const live=data.fixtures.filter(m=>m.status==='inprogress'||m.status==='live');
 const latest=[...data.results].sort((a,b)=>
 b.date.localeCompare(a.date))[0];
 
 content.innerHTML=`
+${live.length?`<h2 class="loss">🔴 LIVE Match Centre</h2>${live.map(m=>matchCard(m)).join('')}`:""}
 <p class="tag">PERLAWANAN SETERUSNYA</p>
 ${next?`<div class="card center"><small>KIRA DETIK SEPAK MULA</small><h2 id="countdown" data-kickoff="${kickoff(next)}"></h2></div>`:''}
 ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</div>'}
@@ -253,7 +259,7 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
 ${esc(sourceLabel)}: ${esc(data.updated)}<br>
-JDT Premium v1.3<br>
+JDT Premium v1.4<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
