@@ -81,8 +81,21 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
+      - name: Verify packaged web assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          source = Path('www/index.html').read_bytes()
+          with ZipFile('android/app/build/outputs/apk/debug/app-debug.apk') as apk:
+              packaged = apk.read('assets/public/index.html')
+          assert source == packaged, 'APK index.html differs from source'
+          assert b"grid.className='popup-grid'" in packaged, 'New player popup missing'
+          print('Verified: APK contains updated player popup')
+          PY
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: JDT-Premium-APK
+          name: JDT-Premium-APK-${{ github.run_number }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
