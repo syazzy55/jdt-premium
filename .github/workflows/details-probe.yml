@@ -1,0 +1,38 @@
+name: JDT Match Details API Test
+on:
+  push:
+    paths:
+      - '.github/workflows/details-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test SportsAPI coverage
+        env:
+          SPORTSAPI_KEY: ${{ secrets.SPORTSAPI_KEY }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request, urllib.error
+          data=json.load(open('www/matches.json'))
+          matches=[m for m in data['results'] if m.get('id')]
+          if not matches:
+              raise SystemExit('No saved result with API fixture ID')
+          match=max(matches,key=lambda m:m['date'])
+          print('Testing fixture',match['id'],match['opponent'])
+          failures=0
+          for suffix in ['', '/events', '/lineups', '/statistics', '/h2h']:
+              try:
+                  req=urllib.request.Request('https://api.sportsapi.app/v2/fixtures/'+str(match['id'])+suffix,headers={'Authorization':'Bearer '+os.environ['SPORTSAPI_KEY'],'Accept':'application/json'})
+                  with urllib.request.urlopen(req,timeout=25) as res:
+                      value=json.load(res)['data']
+                  print(suffix or '/fixture', 'HTTP 200', json.dumps(value,ensure_ascii=True)[:18000])
+              except urllib.error.HTTPError as err:
+                  print(suffix or '/fixture','HTTP',err.code)
+                  failures+=1
+                  if err.code==429: break
+          if failures: raise SystemExit('Some endpoints failed')
+          PY
