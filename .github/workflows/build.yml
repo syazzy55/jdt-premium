@@ -61,6 +61,7 @@ jobs:
           folder=res/'drawable'
           folder.mkdir(exist_ok=True)
           splash.save(folder/'jdt_splash.png')
+          (folder/'ic_jdt_notification.xml').write_text('''<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFFFF" android:pathData="M12,2 L21,5 L20,14 Q18,20 12,23 Q6,20 4,14 L3,5 Z M8,7 L8,15 L10,17 L13,17 L16,14 L16,7 L14,7 L14,14 L12,15 L10,14 L10,7 Z" android:fillType="evenOdd"/></vector>''')
           styles=res/'values/styles.xml'
           import xml.etree.ElementTree as ET
           tree=ET.parse(styles)
