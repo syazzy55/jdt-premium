@@ -263,12 +263,12 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 <button class="tile" onclick="load()">
 <span>🔄</span><br>Muat semula</button>
 </div>
-<div class="card center"><button class="tile" onclick="toggleReminders()">🔔 Tetapan notifikasi</button><p id="reminderStatus" class="muted"></p></div>
+<div class="card center"><button class="tile" onclick="toggleReminders()">🔔 Tetapan notifikasi</button> <button class="tile" onclick="testNotification()">🔔 Uji notifikasi (30 saat)</button><p id="reminderStatus" class="muted"></p></div>
 <h2>Keputusan terkini</h2>
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
 ${esc(sourceLabel)}: ${esc(data.updated)}<br>
-JDT Premium v1.7<br>
+JDT Premium v1.8<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
@@ -392,12 +392,26 @@ let id=0;for(const c of key)id=(Math.imul(id,31)+c.charCodeAt(0))|0;
 notifications.push({id:(id>>>0)%2147483646+1,title:'JDT Premium',body:'JDT vs '+m.opponent+' • '+minutes+' minit lagi',schedule:{at:new Date(at),allowWhileIdle:true}});
 }}
 const pending=await plugin.getPending();
-const old=pending.notifications||[];
+const old=(pending.notifications||[]).filter(n=>n.id!==2147483647);
 if(old.length)await plugin.cancel({notifications:old.map(n=>({id:n.id}))});
 if(notifications.length)await plugin.schedule({notifications});
 const el=document.getElementById('reminderStatus');if(el)el.textContent=notifications.length+' peringatan dijadualkan';
 }catch(e){const el=document.getElementById('reminderStatus');if(el)el.textContent='Notifikasi gagal: '+String(e.message||e);}
 finally{reminderBusy=false;}
+}
+async function testNotification(){
+const p=window.Capacitor?.Plugins?.LocalNotifications;
+if(!p){alert('Ujian hanya tersedia dalam APK Android.');return;}
+try{
+let permission=await p.checkPermissions();
+if(permission.display!=='granted')permission=await p.requestPermissions();
+if(permission.display!=='granted'){alert('Benarkan notifikasi dalam tetapan Android.');return;}
+const id=2147483647;
+const pending=await p.getPending();
+if((pending.notifications||[]).some(n=>n.id===id))await p.cancel({notifications:[{id}]});
+await p.schedule({notifications:[{id,title:'JDT Premium • Ujian',body:'Notifikasi ujian berjaya sampai!',schedule:{at:new Date(Date.now()+30000),allowWhileIdle:true}}]});
+alert('Ujian dijadualkan dalam 30 saat. Tekan OK dan kembali ke skrin utama telefon. Jangan paksa henti aplikasi. Android mungkin melambatkan penghantaran.');
+}catch(e){alert('Ujian gagal: '+String(e.message||e));}
 }
 async function toggleReminders(){
 const p=window.Capacitor?.Plugins?.LocalNotifications;
