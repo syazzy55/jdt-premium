@@ -124,6 +124,7 @@ letter-spacing:1px
 .standings-table tr.zone-row td:first-child{box-shadow:inset 3px 0 #4ade80}
 .standings-table td:nth-child(2){white-space:normal;min-width:105px}
 .live-pulse{animation:pulse 1.4s infinite}@keyframes pulse{50%{opacity:.45}}@media(prefers-reduced-motion:reduce){.live-pulse{animation:none}}
+.detail-button{width:100%;padding:12px;margin-top:14px}.detail-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #304568}.detail-row span:last-child{text-align:right}
 </style>
 </head>
 <body>
@@ -242,10 +243,22 @@ ${m.stadium?`<p class="muted">🏟️ ${esc(m.stadium)}</p>`:''}
 ${!live&&!result&&Number.isFinite(kickoff(m))&&kickoff(m)<=Date.now()?'<p class="muted">Waktu sepak mula telah berlalu • keputusan belum disahkan</p>':''}
 ${status}
 </div>
+${currentView!=='detail'?`<button class="tile detail-button" data-match="${esc(matchKey(m))}" onclick="openDetails(this.dataset.match)">📋 Maklumat perlawanan ›</button>`:''}
 </div>`;
 }
 
 let currentView='home', currentFilter='all', loading=false;
+let detailKey='',detailBack='home',detailFilter='all';
+function matchKey(m){return m.id!=null?'id:'+m.id:JSON.stringify([m.date,m.opponent,m.competition]);}
+function openDetails(key){detailBack=currentView;detailFilter=currentFilter;detailKey=key;renderDetails();window.scrollTo(0,0);}
+function closeDetails(){if(detailBack==='fixtures'||detailBack==='results')showMatches(detailBack,detailFilter);else home();}
+function renderDetails(){
+currentView='detail';
+const result=data.results.find(m=>matchKey(m)===detailKey);
+const m=result||data.fixtures.find(m=>matchKey(m)===detailKey);
+const row=(label,value)=>'<div class="detail-row"><span class="muted">'+esc(label)+'</span><span>'+esc(value)+'</span></div>';
+content.innerHTML='<button class="tile detail-button" onclick="closeDetails()">‹ Kembali</button><h2>📋 Maklumat perlawanan</h2>'+(!m?'<div class="card">Perlawanan tidak lagi tersedia.</div>':matchCard(m,!!result)+'<div class="card"><h3>Info perlawanan</h3>'+row('Pertandingan',m.competition)+row('Tarikh',dateText(m.date))+row('Sepak mula',m.time?m.time+' MYT':'Belum disahkan')+row('Lokasi',m.venue==='Away'?'Tempat lawan':'Tempat sendiri')+row('Stadium',m.stadium||'Belum tersedia')+row('Status',result?'Tamat':(['live','inprogress'].includes(m.status)?'Sedang berlangsung':'Belum disahkan'))+'</div><div class="card"><h3>Statistik & pemain</h3>'+['Minit / separuh masa','Penjaring gol','Kad kuning / merah','Kesebelasan utama','Statistik perlawanan'].map(x=>row(x,'Belum tersedia')).join('')+'<p class="muted">Data terperinci belum dibekalkan oleh integrasi API semasa.</p></div><div class="card"><h3>Rekod pertemuan tersimpan</h3>'+ (data.results.filter(x=>x.opponent===m.opponent&&matchKey(x)!==detailKey).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(x=>row(dateText(x.date),'JDT '+x.jdtScore+' – '+x.opponentScore+' '+x.opponent)).join('')||'<p class="muted">Tiada rekod lain dalam aplikasi.</p>')+'<p class="muted">Berdasarkan keputusan tersimpan sahaja, bukan rekod H2H lengkap.</p></div><p class="muted">'+esc(sourceLabel)+'</p>');
+}
 function kickoff(m){return m.time?Date.parse(m.date+'T'+m.time+':00+08:00'):NaN;}
 function tick(){const el=document.getElementById('countdown');if(!el)return;const ms=Number(el.dataset.kickoff)-Date.now();if(!Number.isFinite(ms)){el.textContent='Masa belum disahkan';return;}if(ms<=0){el.textContent='Waktu sepak mula telah tiba • status belum disahkan';return;}const n=Math.floor(ms/1000);el.textContent=Math.floor(n/86400)+'h '+String(Math.floor(n/3600)%24).padStart(2,'0')+'j '+String(Math.floor(n/60)%60).padStart(2,'0')+'m '+String(n%60).padStart(2,'0')+'s';}
 function liveCentre(){
@@ -280,7 +293,7 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
 ${esc(sourceLabel)}: ${esc(data.updated)}<br>
-JDT Premium v2.1<br>
+JDT Premium v2.2<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
@@ -401,7 +414,7 @@ catch(e){try{data=await readData('matches.json');sourceLabel='Data dalam APK';}c
 if(sourceLabel==='Data GitHub dalam talian'&&previousSource===sourceLabel&&!document.hidden)await notifyScoreChanges(previous,data);
 if(before!==JSON.stringify(data)||!background)syncReminders();
 if(background&&before===JSON.stringify(data)&&previousSource===sourceLabel)return;
-if(background){const y=window.scrollY;if(currentView==='standings')renderStandings();else if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
+if(background){const y=window.scrollY;if(currentView==='detail')renderDetails();else if(currentView==='standings')renderStandings();else if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
 tick();
 }
 async function notifyScoreChanges(previous,next){
