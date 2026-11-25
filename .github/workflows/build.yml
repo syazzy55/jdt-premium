@@ -31,7 +31,7 @@ jobs:
           "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Install dependencies
-        run: npm install
+        run: npm install && npm install @capacitor/local-notifications@7
 
       - name: Create Android project
         run: npx cap add android
@@ -55,6 +55,23 @@ jobs:
           for folder in res.glob('mipmap-anydpi*'):
               for name in ['ic_launcher.xml','ic_launcher_round.xml']:
                   (folder / name).unlink(missing_ok=True)
+          im.thumbnail((288,288), Image.Resampling.LANCZOS)
+          splash = Image.new('RGBA',(432,432),(8,14,28,255))
+          splash.alpha_composite(im,((432-im.width)//2,(432-im.height)//2))
+          folder=res/'drawable'
+          folder.mkdir(exist_ok=True)
+          splash.save(folder/'jdt_splash.png')
+          styles=res/'values/styles.xml'
+          import xml.etree.ElementTree as ET
+          tree=ET.parse(styles)
+          for style in tree.getroot().findall('style'):
+              if style.get('name')=='AppTheme.NoActionBarLaunch':
+                  for item in list(style):
+                      if item.get('name') in ('windowSplashScreenAnimatedIcon','windowSplashScreenBackground','android:background'):
+                          style.remove(item)
+                  ET.SubElement(style,'item',name='windowSplashScreenAnimatedIcon').text='@drawable/jdt_splash'
+                  ET.SubElement(style,'item',name='windowSplashScreenBackground').text='#080e1c'
+          tree.write(styles,encoding='utf-8',xml_declaration=True)
           PY
 
       - name: Build APK
