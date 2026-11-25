@@ -1,0 +1,44 @@
+name: JDT Player Profile API Test
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/player-profile-probe.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test player endpoints
+        env:
+          SPORTSAPI_KEY: ${{ secrets.SPORTSAPI_KEY }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request, urllib.error
+          def get(path):
+              req=urllib.request.Request('https://api.sportsapi.app/v2/'+path,headers={'Authorization':'Bearer '+os.environ['SPORTSAPI_KEY'],'Accept':'application/json'})
+              with urllib.request.urlopen(req,timeout=25) as res:
+                  return json.load(res).get('data')
+          matches=json.load(open('www/matches.json'))['results']
+          match=next(m for m in matches if m.get('id'))
+          lineup=get('fixtures/'+str(match['id'])+'/lineups')
+          def players(x):
+              if isinstance(x,dict):
+                  p=x.get('player')
+                  if isinstance(p,dict) and p.get('id'): yield p
+                  for v in x.values(): yield from players(v)
+              elif isinstance(x,list):
+                  for v in x: yield from players(v)
+          p=next(players(lineup),None)
+          if not p: raise SystemExit('No player ID found')
+          print('Testing player',p.get('name'),p['id'])
+          for suffix in ['', '/seasons', '/statistics', '/career']:
+              try:
+                  value=get('players/'+str(p['id'])+suffix)
+                  print(suffix or '/profile','HTTP 200',json.dumps(value,ensure_ascii=True)[:12000])
+              except urllib.error.HTTPError as e:
+                  print(suffix or '/profile','HTTP',e.code)
+                  if e.code in (401,403,429): break
+          PY
