@@ -247,15 +247,20 @@ ${status}
 let currentView='home', currentFilter='all', loading=false;
 function kickoff(m){return m.time?Date.parse(m.date+'T'+m.time+':00+08:00'):NaN;}
 function tick(){const el=document.getElementById('countdown');if(!el)return;const ms=Number(el.dataset.kickoff)-Date.now();if(!Number.isFinite(ms)){el.textContent='Masa belum disahkan';return;}if(ms<=0){el.textContent='Waktu sepak mula telah tiba • status belum disahkan';return;}const n=Math.floor(ms/1000);el.textContent=Math.floor(n/86400)+'h '+String(Math.floor(n/3600)%24).padStart(2,'0')+'j '+String(Math.floor(n/60)%60).padStart(2,'0')+'m '+String(n%60).padStart(2,'0')+'s';}
+function liveCentre(){
+const active=data.fixtures.filter(m=>['inprogress','live'].includes(m.status));
+const waiting=data.fixtures.filter(m=>Number.isFinite(kickoff(m))&&Date.now()>=kickoff(m)&&Date.now()-kickoff(m)<10800000&&!active.includes(m));
+return '<h2>🔴 Live Match Centre</h2>'+ (active.length?active.map(m=>matchCard(m)).join(''):waiting.length?waiting.map(m=>matchCard(m)).join(''):'<div class="card center">Tiada perlawanan LIVE dilaporkan</div>')+'<p class="muted">Status daripada SportsAPI melalui GitHub. Kemas kini boleh lewat; bukan siaran masa nyata.</p>';
+}
 function home(){
 currentView='home';
-const next=upcoming()[0];
+const next=upcoming().find(m=>!['inprogress','live'].includes(m.status));
 const live=data.fixtures.filter(m=>m.status==='inprogress'||m.status==='live');
 const latest=[...data.results].sort((a,b)=>
 b.date.localeCompare(a.date))[0];
 
 content.innerHTML=`
-${live.length?`<h2 class="loss">🔴 LIVE Match Centre</h2>${live.map(m=>matchCard(m)).join('')}`:""}
+${liveCentre()}
 <p class="tag">PERLAWANAN SETERUSNYA</p>
 ${next?`<div class="card center"><small>KIRA DETIK SEPAK MULA</small><h2 id="countdown" data-kickoff="${kickoff(next)}"></h2></div>`:''}
 ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</div>'}
@@ -269,12 +274,12 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 <button class="tile" onclick="load()">
 <span>🔄</span><br>Muat semula</button>
 </div>
-<div class="card center"><button class="tile" onclick="toggleReminders()">🔔 Tetapan notifikasi</button> <button class="tile" onclick="testNotification()">🔔 Uji notifikasi (30 saat)</button><p id="reminderStatus" class="muted"></p></div>
+<div class="card center"><button class="tile" onclick="toggleReminders()">🔔 Tetapan notifikasi</button> <button class="tile" onclick="testNotification()">🔔 Uji notifikasi (30 saat)</button><p id="reminderStatus" class="muted">${esc(reminderText|| (localStorage.getItem('jdtReminders')==='yes'?'Peringatan aktif • menyemak jadual':'Peringatan tidak aktif'))}</p></div>
 <h2>Prestasi terkini</h2>${recentForm()}<h2>Kedudukan JDT</h2><div id="homeStandings">${summaryStandings()}</div><h2>Keputusan terkini</h2>
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
 ${esc(sourceLabel)}: ${esc(data.updated)}<br>
-JDT Premium v1.9<br>
+JDT Premium v2.0<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
@@ -397,7 +402,7 @@ if(background&&before===JSON.stringify(data)&&previousSource===sourceLabel)retur
 if(background){const y=window.scrollY;if(currentView==='standings')renderStandings();else if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
 tick();
 }
-let reminderBusy=false;
+let reminderBusy=false, reminderText='';
 async function syncReminders(){
 const plugin=window.Capacitor?.Plugins?.LocalNotifications;
 if(!plugin||localStorage.getItem('jdtReminders')!=='yes'||reminderBusy)return;
@@ -416,7 +421,7 @@ const pending=await plugin.getPending();
 const old=(pending.notifications||[]).filter(n=>n.id!==2147483647);
 if(old.length)await plugin.cancel({notifications:old.map(n=>({id:n.id}))});
 if(notifications.length)await plugin.schedule({notifications});
-const el=document.getElementById('reminderStatus');if(el)el.textContent=notifications.length+' peringatan dijadualkan';
+reminderText=notifications.length+' peringatan dijadualkan';const el=document.getElementById('reminderStatus');if(el)el.textContent=reminderText;
 }catch(e){const el=document.getElementById('reminderStatus');if(el)el.textContent='Notifikasi gagal: '+String(e.message||e);}
 finally{reminderBusy=false;}
 }
@@ -439,7 +444,7 @@ const p=window.Capacitor?.Plugins?.LocalNotifications;
 if(!p){alert('Notifikasi hanya tersedia dalam APK Android.');return;}
 try{
 if(localStorage.getItem('jdtReminders')==='yes'){
-localStorage.removeItem('jdtReminders');const pending=await p.getPending();if(pending.notifications.length)await p.cancel({notifications:pending.notifications.map(n=>({id:n.id}))});alert('Notifikasi dimatikan');return;
+localStorage.removeItem('jdtReminders');reminderText='Peringatan tidak aktif';const el=document.getElementById('reminderStatus');if(el)el.textContent=reminderText;const pending=await p.getPending();if(pending.notifications.length)await p.cancel({notifications:pending.notifications.map(n=>({id:n.id}))});alert('Notifikasi dimatikan');return;
 }
 const permission=await p.requestPermissions();if(permission.display!=='granted'){alert('Benarkan notifikasi dalam tetapan Android.');return;}
 localStorage.setItem('jdtReminders','yes');await syncReminders();alert('Notifikasi diaktifkan. Semak status peringatan pada Home.');
