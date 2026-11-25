@@ -123,6 +123,7 @@ letter-spacing:1px
 .form-win{background:#166534}.form-draw{background:#85620b}.form-loss{background:#a32640}
 .standings-table tr.zone-row td:first-child{box-shadow:inset 3px 0 #4ade80}
 .standings-table td:nth-child(2){white-space:normal;min-width:105px}
+.live-pulse{animation:pulse 1.4s infinite}@keyframes pulse{50%{opacity:.45}}@media(prefers-reduced-motion:reduce){.live-pulse{animation:none}}
 </style>
 </head>
 <body>
@@ -215,16 +216,16 @@ let score='VS';
 let status='';
 if(live){
 if(Number.isFinite(m.jdtScore)&&Number.isFinite(m.opponentScore))score=away?m.opponentScore+' - '+m.jdtScore:m.jdtScore+' - '+m.opponentScore;
-status='<b class="loss">● LIVE • '+esc(m.liveLabel||'Sedang berlangsung')+'</b>';
+status='<b class="loss"><span class="live-pulse">●</span> LIVE • '+esc(m.liveLabel||'Sedang berlangsung')+'</b>';
 }else if(result){
 score=away?
 m.opponentScore+' - '+m.jdtScore:
 m.jdtScore+' - '+m.opponentScore;
-status=m.jdtScore>m.opponentScore?
+status='<small>FT • Tamat</small><br>'+(m.jdtScore>m.opponentScore?
 '<b class="win">MENANG</b>':
 m.jdtScore===m.opponentScore?
 '<b class="draw">SERI</b>':
-'<b class="loss">KALAH</b>';
+'<b class="loss">KALAH</b>');
 }
 return `<div class="card">
 <div class="tag">${esc(m.competition)}</div>
@@ -250,7 +251,7 @@ function tick(){const el=document.getElementById('countdown');if(!el)return;cons
 function liveCentre(){
 const active=data.fixtures.filter(m=>['inprogress','live'].includes(m.status));
 const waiting=data.fixtures.filter(m=>Number.isFinite(kickoff(m))&&Date.now()>=kickoff(m)&&Date.now()-kickoff(m)<10800000&&!active.includes(m));
-return '<h2>🔴 Live Match Centre</h2>'+ (active.length?active.map(m=>matchCard(m)).join(''):waiting.length?waiting.map(m=>matchCard(m)).join(''):'<div class="card center">Tiada perlawanan LIVE dilaporkan</div>')+'<p class="muted">Status daripada SportsAPI melalui GitHub. Kemas kini boleh lewat; bukan siaran masa nyata.</p>';
+return '<h2>🔴 Live Match Centre</h2>'+ (active.length?active.map(m=>matchCard(m)).join(''):waiting.length?waiting.map(m=>matchCard(m)).join(''):'<div class="card center">Tiada perlawanan LIVE dilaporkan</div>')+'<p class="muted">Data LIVE: '+esc(data.updatedAt?new Date(data.updatedAt).toLocaleString('ms-MY',{timeZone:'Asia/Kuala_Lumpur'}):data.updated||'Belum tersedia')+' • '+esc(sourceLabel)+'. Kemas kini boleh lewat.</p>';
 }
 function home(){
 currentView='home';
@@ -279,7 +280,7 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
 ${esc(sourceLabel)}: ${esc(data.updated)}<br>
-JDT Premium v2.0<br>
+JDT Premium v2.1<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
@@ -386,7 +387,7 @@ function validData(d){return d&&Array.isArray(d.fixtures)&&Array.isArray(d.resul
 async function readData(url,signal){const response=await fetch(url,{cache:'no-store',signal});if(!response.ok)throw Error('Data gagal dimuatkan');const d=await response.json();if(!validData(d))throw Error('Data tidak sah');return d;}
 async function load(background=false){
 if(loading)return;loading=true;
-const before=JSON.stringify(data),previousSource=sourceLabel;
+const previous=data;const before=JSON.stringify(data),previousSource=sourceLabel;
 const controller=new AbortController();
 const timeout=setTimeout(()=>controller.abort(),8000);
 try{
@@ -397,10 +398,21 @@ try{localStorage.setItem('jdtMatches',JSON.stringify(data));}catch(e){}
 try{const cached=JSON.parse(localStorage.getItem('jdtMatches'));if(!validData(cached))throw Error('Tiada cache');data=cached;sourceLabel='Data simpanan luar talian';}
 catch(e){try{data=await readData('matches.json');sourceLabel='Data dalam APK';}catch(e){content.innerHTML='<div class="card">Gagal memuatkan data.<button class="tile" onclick="load()">Cuba lagi</button></div>';return;}}
 }finally{clearTimeout(timeout);loading=false;}
+if(sourceLabel==='Data GitHub dalam talian'&&previousSource===sourceLabel&&!document.hidden)await notifyScoreChanges(previous,data);
 if(before!==JSON.stringify(data)||!background)syncReminders();
 if(background&&before===JSON.stringify(data)&&previousSource===sourceLabel)return;
 if(background){const y=window.scrollY;if(currentView==='standings')renderStandings();else if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
 tick();
+}
+async function notifyScoreChanges(previous,next){
+if(localStorage.getItem('jdtReminders')!=='yes')return;
+const p=window.Capacitor?.Plugins?.LocalNotifications;if(!p)return;
+try{if((await p.checkPermissions()).display!=='granted')return;
+for(const m of next.fixtures.filter(x=>['live','inprogress'].includes(x.status))){
+const old=previous.fixtures.find(x=>x.id!=null&&x.id===m.id);
+if(!old||!['live','inprogress'].includes(old.status)||!Number.isFinite(old.jdtScore)||!Number.isFinite(m.jdtScore)||!Number.isFinite(m.opponentScore)||m.jdtScore<=old.jdtScore)continue;
+await p.schedule({notifications:[{id:2147483646,title:'JDT Premium • Perubahan skor',body:'JDT '+m.jdtScore+' - '+m.opponentScore+' '+m.opponent+' • Skor dilaporkan API',smallIcon:'ic_jdt_notification'}]});
+}}catch(e){console.warn('Score notification',e);}
 }
 let reminderBusy=false, reminderText='';
 async function syncReminders(){
@@ -415,10 +427,10 @@ for(const minutes of [60,15]){
 const at=kickoff(m)-minutes*60000;if(at<=Date.now()+1000)continue;
 const key=m.date+'|'+m.time+'|'+m.opponent+'|'+minutes;
 let id=0;for(const c of key)id=(Math.imul(id,31)+c.charCodeAt(0))|0;
-notifications.push({id:(id>>>0)%2147483646+1,title:'JDT Premium',smallIcon:'ic_jdt_notification',body:'JDT vs '+m.opponent+' • '+minutes+' minit lagi',schedule:{at:new Date(at),allowWhileIdle:true}});
+notifications.push({id:(id>>>0)%2147483645+1,title:'JDT Premium',smallIcon:'ic_jdt_notification',body:'JDT vs '+m.opponent+' • '+minutes+' minit lagi',schedule:{at:new Date(at),allowWhileIdle:true}});
 }}
 const pending=await plugin.getPending();
-const old=(pending.notifications||[]).filter(n=>n.id!==2147483647);
+const old=(pending.notifications||[]).filter(n=>n.id!==2147483647&&n.id!==2147483646);
 if(old.length)await plugin.cancel({notifications:old.map(n=>({id:n.id}))});
 if(notifications.length)await plugin.schedule({notifications});
 reminderText=notifications.length+' peringatan dijadualkan';const el=document.getElementById('reminderStatus');if(el)el.textContent=reminderText;
