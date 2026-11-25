@@ -111,6 +111,12 @@ font-size:11px;
 color:#c7d5ed;
 letter-spacing:1px
 }
+.standings-scroll{overflow-x:auto}
+.standings-table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+.standings-table th,.standings-table td{padding:9px 5px;text-align:center;border-bottom:1px solid #304568}
+.standings-table td:nth-child(2){text-align:left}
+.standings-table img{width:23px;height:23px;object-fit:contain;vertical-align:middle;margin-right:5px}
+.standings-table tr.jdt-row{background:#234776;color:#fff;font-weight:bold}
 </style>
 </head>
 <body>
@@ -128,6 +134,7 @@ letter-spacing:1px
 <button onclick="home()">🏠<br>Home</button>
 <button onclick="showMatches('fixtures')">📅<br>Jadual</button>
 <button onclick="showMatches('results')">🏆<br>Keputusan</button>
+<button onclick="standings()">🏅<br>Kedudukan</button>
 <button onclick="stats()">📊<br>Statistik</button>
 </nav>
 
@@ -260,7 +267,7 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
 ${esc(sourceLabel)}: ${esc(data.updated)}<br>
-JDT Premium v1.5<br>
+JDT Premium v1.6<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
@@ -292,6 +299,33 @@ showMatches(type,e.target.value);
 window.scrollTo(0,0);
 }
 
+let standingLeague='Liga Super', standingData=null, standingLoading=false;
+function renderStandings(){
+if(currentView!=='standings')return;
+const entry=standingData?.[standingLeague];
+const groups=Array.isArray(entry?.groups)?[...entry.groups]:[];
+groups.sort((a,b)=>Number((b.rows||[]).some(r=>r.team?.id===210860))-Number((a.rows||[]).some(r=>r.team?.id===210860)));
+content.innerHTML='<h2>🏅 Kedudukan 2026/2027</h2><select id="standingLeague">'+['Liga Super','ACLE','Shopee Cup'].map(n=>'<option '+(n===standingLeague?'selected':'')+'>'+esc(n)+'</option>').join('')+'</select>'+groups.map(g=>'<div class="card"><h3>'+esc(g.name)+'</h3><div class="standings-scroll"><table class="standings-table"><thead><tr><th>#</th><th>Pasukan</th><th>P</th><th>M</th><th>S</th><th>K</th><th>BG</th><th>Mata</th></tr></thead><tbody>'+ (g.rows||[]).map(r=>{
+const t=r.team||{}, name=t.id===210860?'JDT':(t.shortName||t.name||'—');
+const file=logos[name]||logos[t.name];
+const img=file?'logos/'+file:(Number.isInteger(t.id)?'https://cdn.sportsapi.app/v2/teams/'+t.id+'/logo':'');
+return '<tr class="'+(t.id===210860?'jdt-row':'')+'"><td>'+esc(r.position)+'</td><td>'+(img?'<img src="'+esc(img)+'" alt="" onerror="this.style.display=\'none\'">':'')+esc(name)+'</td>'+[r.played,r.wins,r.draws,r.losses,r.scoreDifference,r.points].map(v=>'<td>'+esc(v??'—')+'</td>').join('')+'</tr>';
+}).join('')+'</tbody></table></div></div>').join('')+(groups.length?'':'<div class="card">'+(standingLoading?'Memuatkan kedudukan...':'Data kedudukan belum tersedia.')+'</div>')+'<p class="muted">P: Perlawanan · M: Menang · S: Seri · K: Kalah · BG: Beza gol</p><p class="muted">SportsAPI • '+esc(entry?.updated?new Date(entry.updated).toLocaleString('ms-MY',{timeZone:'Asia/Kuala_Lumpur'}):'Belum dikemas kini')+'</p>';
+document.getElementById('standingLeague').onchange=e=>{standingLeague=e.target.value;renderStandings();};
+}
+async function standings(){
+currentView='standings';
+if(!standingData){try{standingData=JSON.parse(localStorage.getItem('jdtStandings'));}catch(e){}}
+if(standingLoading){renderStandings();return;}
+standingLoading=true;renderStandings();
+try{
+const response=await fetch('https://raw.githubusercontent.com/syazzy55/jdt-premium/main/www/standings.json?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(8000)});
+if(!response.ok)throw Error('HTTP');
+const d=await response.json();if(!Object.values(d).some(v=>Array.isArray(v.groups)))throw Error('Invalid data');
+standingData=d;try{localStorage.setItem('jdtStandings',JSON.stringify(d));}catch(e){}
+}catch(e){if(!standingData){try{const r=await fetch('standings.json');if(r.ok)standingData=await r.json();}catch(e){}}}
+finally{standingLoading=false;renderStandings();}
+}
 function stats(){
 currentView='stats';
 const r=data.results;
@@ -337,7 +371,7 @@ try{const cached=JSON.parse(localStorage.getItem('jdtMatches'));if(!validData(ca
 catch(e){try{data=await readData('matches.json');sourceLabel='Data dalam APK';}catch(e){content.innerHTML='<div class="card">Gagal memuatkan data.<button class="tile" onclick="load()">Cuba lagi</button></div>';return;}}
 }finally{clearTimeout(timeout);loading=false;}
 if(background&&before===JSON.stringify(data)&&previousSource===sourceLabel)return;
-if(background){const y=window.scrollY;if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
+if(background){const y=window.scrollY;if(currentView==='standings')renderStandings();else if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
 tick();
 }
 load();
