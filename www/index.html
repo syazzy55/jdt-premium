@@ -263,11 +263,12 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 <button class="tile" onclick="load()">
 <span>🔄</span><br>Muat semula</button>
 </div>
+<div class="card center"><button class="tile" onclick="toggleReminders()">🔔 Tetapan notifikasi</button><p id="reminderStatus" class="muted"></p></div>
 <h2>Keputusan terkini</h2>
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
 ${esc(sourceLabel)}: ${esc(data.updated)}<br>
-JDT Premium v1.6<br>
+JDT Premium v1.7<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
@@ -370,9 +371,44 @@ try{localStorage.setItem('jdtMatches',JSON.stringify(data));}catch(e){}
 try{const cached=JSON.parse(localStorage.getItem('jdtMatches'));if(!validData(cached))throw Error('Tiada cache');data=cached;sourceLabel='Data simpanan luar talian';}
 catch(e){try{data=await readData('matches.json');sourceLabel='Data dalam APK';}catch(e){content.innerHTML='<div class="card">Gagal memuatkan data.<button class="tile" onclick="load()">Cuba lagi</button></div>';return;}}
 }finally{clearTimeout(timeout);loading=false;}
+if(before!==JSON.stringify(data)||!background)syncReminders();
 if(background&&before===JSON.stringify(data)&&previousSource===sourceLabel)return;
 if(background){const y=window.scrollY;if(currentView==='standings')renderStandings();else if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
 tick();
+}
+let reminderBusy=false;
+async function syncReminders(){
+const plugin=window.Capacitor?.Plugins?.LocalNotifications;
+if(!plugin||localStorage.getItem('jdtReminders')!=='yes'||reminderBusy)return;
+reminderBusy=true;
+try{
+const permission=await plugin.checkPermissions();if(permission.display!=='granted')return;
+const notifications=[];
+for(const m of upcoming().filter(m=>m.time).slice(0,24)){
+for(const minutes of [60,15]){
+const at=kickoff(m)-minutes*60000;if(at<=Date.now()+1000)continue;
+const key=m.date+'|'+m.time+'|'+m.opponent+'|'+minutes;
+let id=0;for(const c of key)id=(Math.imul(id,31)+c.charCodeAt(0))|0;
+notifications.push({id:(id>>>0)%2147483646+1,title:'JDT Premium',body:'JDT vs '+m.opponent+' • '+minutes+' minit lagi',schedule:{at:new Date(at),allowWhileIdle:true}});
+}}
+const pending=await plugin.getPending();
+const old=pending.notifications||[];
+if(old.length)await plugin.cancel({notifications:old.map(n=>({id:n.id}))});
+if(notifications.length)await plugin.schedule({notifications});
+const el=document.getElementById('reminderStatus');if(el)el.textContent=notifications.length+' peringatan dijadualkan';
+}catch(e){const el=document.getElementById('reminderStatus');if(el)el.textContent='Notifikasi gagal: '+String(e.message||e);}
+finally{reminderBusy=false;}
+}
+async function toggleReminders(){
+const p=window.Capacitor?.Plugins?.LocalNotifications;
+if(!p){alert('Notifikasi hanya tersedia dalam APK Android.');return;}
+try{
+if(localStorage.getItem('jdtReminders')==='yes'){
+localStorage.removeItem('jdtReminders');const pending=await p.getPending();if(pending.notifications.length)await p.cancel({notifications:pending.notifications.map(n=>({id:n.id}))});alert('Notifikasi dimatikan');return;
+}
+const permission=await p.requestPermissions();if(permission.display!=='granted'){alert('Benarkan notifikasi dalam tetapan Android.');return;}
+localStorage.setItem('jdtReminders','yes');await syncReminders();alert('Notifikasi diaktifkan. Semak status peringatan pada Home.');
+}catch(e){alert(String(e.message||e));}
 }
 load();
 setInterval(tick,1000);
