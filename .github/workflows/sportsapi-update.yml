@@ -58,13 +58,19 @@ jobs:
           SPORTSAPI_KEY: ${{ secrets.SPORTSAPI_KEY }}
         run: python scripts/sportsapi-update.py
 
+      - name: Collect match details
+        if: steps.window.outputs.run == 'true'
+        env:
+          SPORTSAPI_KEY: ${{ secrets.SPORTSAPI_KEY }}
+        run: python scripts/match-details.py
+
       - name: Save updated matches
         if: steps.window.outputs.run == 'true'
         run: |
           git config user.name "JDT Smart Update"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add www/matches.json
+          git add www/matches.json www/details.json
 
           if git diff --cached --quiet; then
             echo "No changes detected"
