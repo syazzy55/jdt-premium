@@ -153,6 +153,7 @@ data["results"] = sorted(
 )
 
 data["updated"] = datetime.now(TZ).strftime("%Y-%m-%d")
+data["updatedAt"] = datetime.now(TZ).isoformat()
 
 data["sources"] = list(dict.fromkeys(
     data.get("sources", []) + [BASE]
