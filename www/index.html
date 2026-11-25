@@ -144,6 +144,7 @@ const logos={
 'Brunei DPMM':'dpmm.png',
 'Jeonbuk':'jeonbuk.png',
 "Shan United":"shan.png",
+"Persib Bandung":"https://cdn.sportsapi.app/v2/teams/185961/logo",
 "Penang FC":"penang.png",
 "Sabah FC":"sabah.png",
 "Selangor FC":"selangor.png",
@@ -172,7 +173,7 @@ function team(name){
 const short=esc(name.split(' ').map(x=>x[0]).join('').slice(0,3));
 const file=logos[name];
 return `<div class="team">
-${file?`<img src="logos/${file}" alt="${esc(name)}" ${file==='klcity.jpeg'?'style="border-radius:50%;"':''}
+${file?`<img src="${file.startsWith('https://')?file:'logos/'+file}" alt="${esc(name)}" ${file==='klcity.jpeg'?'style="border-radius:50%;"':''}
 onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
 <div class="placeholder" style="display:none">${short}</div>`
 :`<div class="placeholder">${short}</div>`}
@@ -259,7 +260,7 @@ ${next?matchCard(next):'<div class="card">Tiada jadual akan datang dalam data.</
 ${latest?matchCard(latest,true):'Tiada keputusan'}
 <p class="muted center">
 ${esc(sourceLabel)}: ${esc(data.updated)}<br>
-JDT Premium v1.4<br>
+JDT Premium v1.4.1<br>
 Aplikasi penyokong tidak rasmi
 </p>`;
 window.scrollTo(0,0);
