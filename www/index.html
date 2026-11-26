@@ -413,6 +413,23 @@ standingData=d;standingsFetchedAt=Date.now();try{localStorage.setItem('jdtStandi
 }catch(e){if(!standingData){try{const r=await fetch('standings.json');if(r.ok)standingData=await r.json();}catch(e){}}}
 finally{standingLoading=false;renderStandings();const el=document.getElementById('homeStandings');if(el)el.innerHTML=summaryStandings();}
 }
+
+async function playerCentre(){
+currentView='players';content.innerHTML='<h2>🐯 Player Centre</h2><p>Memuatkan profil pemain...</p>';window.scrollTo(0,0);
+const raw=await loadPlayerProfiles();if(currentView!=='players')return;
+const players=Object.values(raw).filter(e=>String(e?.profile?.team?.id)==='210860').sort((a,b)=>Number(a.profile.jerseyNumber||999)-Number(b.profile.jerseyNumber||999));
+const key=s=>[s.league?.id,s.season?.id].join(':');
+const competitions=new Map();players.forEach(e=>(e.statistics||[]).filter(s=>String(s.team?.id)==='210860'&&s.type==='overall').forEach(s=>competitions.set(key(s),[s.league?.name,s.season?.year].filter(Boolean).join(' • '))));
+const opts=players.map(e=>'<option value="'+esc(e.profile.id)+'">'+esc(e.profile.name)+'</option>').join('');
+content.innerHTML='<h2>🐯 Player Centre Premium</h2><p class="muted">Profil JDT tersedia: '+players.length+' • bukan senarai skuad rasmi lengkap</p><div class="card"><input id="pcSearch" placeholder="Cari pemain" style="width:100%;padding:12px;box-sizing:border-box"><div id="pcList"></div></div><h2>Ranking & perbandingan</h2><div class="card"><select id="pcLeague">'+Array.from(competitions,([k,v])=>'<option value="'+esc(k)+'">'+esc(v)+'</option>').join('')+'</select><select id="pcMetric"><option value="goals">Gol</option><option value="assists">Assist</option><option value="averageRating">Rating</option></select><div id="pcRank"></div><h3>Banding pemain</h3><select id="pcA">'+opts+'</select><select id="pcB">'+opts+'</select><div id="pcCompare"></div></div>';
+const el=id=>document.getElementById(id);
+const photo=p=>typeof p.image==='string'&&p.image.startsWith('https://cdn.sportsapi.app/')?'<img loading="lazy" src="'+esc(p.image)+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover" alt="">':'';
+const renderList=()=>{const q=el('pcSearch').value.toLowerCase();el('pcList').innerHTML=players.filter(e=>e.profile.name.toLowerCase().includes(q)).map(({profile:p})=>'<button data-pc-id="'+esc(p.id)+'" style="display:flex;align-items:center;gap:12px;width:100%;margin-top:8px;text-align:left">'+photo(p)+'<span>#'+esc(p.jerseyNumber)+' '+esc(p.name)+'<br><small>'+esc(p.country?.name||'')+' • '+esc(({G:'Penjaga gol',D:'Pertahanan',M:'Tengah',F:'Penyerang'})[p.positionCode]||p.position||'')+'</small></span></button>').join('')||'<p>Tiada pemain ditemui.</p>';el('pcList').querySelectorAll('button').forEach(b=>b.onclick=()=>{const p=players.find(e=>String(e.profile.id)===b.dataset.pcId).profile;b.dataset.playerId=p.id;b.dataset.player=p.name;b.dataset.team='JDT';b.dataset.stats='Pilih profil untuk statistik musim';showPitchPlayer(b);document.querySelector('#pitch-popup > button')?.click();});};
+const stat=e=>(e?.statistics||[]).find(s=>key(s)===el('pcLeague').value&&String(s.team?.id)==='210860'&&s.type==='overall')?.statistics||{};
+const renderStats=()=>{const m=el('pcMetric').value;const ranked=players.filter(e=>stat(e)[m]!=null&&Number.isFinite(Number(stat(e)[m]))).sort((a,b)=>Number(stat(b)[m])-Number(stat(a)[m]));el('pcRank').innerHTML=ranked.map((e,i)=>'<p>'+ (i+1)+'. '+esc(e.profile.name)+' — <strong>'+esc(stat(e)[m])+'</strong></p>').join('')||'<p>Statistik belum tersedia.</p>';const a=stat(players.find(e=>String(e.profile.id)===el('pcA').value)),b=stat(players.find(e=>String(e.profile.id)===el('pcB').value));el('pcCompare').innerHTML='<div class="popup-grid">'+[['Perlawanan','appearances'],['Gol','goals'],['Assist','assists'],['Rating','averageRating'],['Minit','minutesPlayed'],['Tackles','tackles']].map(([l,k])=>'<div><small>'+l+'</small><strong>'+esc(a[k]??'—')+' / '+esc(b[k]??'—')+'</strong></div>').join('')+'</div>';};
+el('pcSearch').oninput=renderList;['pcLeague','pcMetric','pcA','pcB'].forEach(id=>el(id).onchange=renderStats);if(players.length>1)el('pcB').selectedIndex=1;renderList();renderStats();
+}
+
 function stats(){
 currentView='stats';
 const r=data.results;
@@ -422,7 +439,7 @@ const l=r.length-w-d;
 const gf=r.reduce((s,m)=>s+m.jdtScore,0);
 const ga=r.reduce((s,m)=>s+m.opponentScore,0);
 content.innerHTML=`
-<h2>📊 Statistik JDT</h2>
+<h2>📊 Statistik JDT</h2><button class="tile" onclick="playerCentre()">🐯 Player Centre Premium</button>
 <div class="grid">
 <div class="card center"><h1>${r.length}</h1>Perlawanan</div>
 <div class="card center"><h1 class="win">${w}</h1>Menang</div>
@@ -460,7 +477,7 @@ catch(e){try{data=await readData('matches.json');sourceLabel='Data dalam APK';}c
 if(sourceLabel==='Data GitHub dalam talian'&&previousSource===sourceLabel&&!document.hidden)await notifyScoreChanges(previous,data);
 if(before!==JSON.stringify(data)||!background)syncReminders();
 if(background&&before===JSON.stringify(data)&&previousSource===sourceLabel)return;
-if(background){const y=window.scrollY;if(currentView==='detail')renderDetails();else if(currentView==='standings')renderStandings();else if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
+if(background){const y=window.scrollY;if(currentView==='detail')renderDetails();else if(currentView==='standings')renderStandings();else if(currentView==='players'){}else if(currentView==='stats')stats();else if(currentView==='fixtures'||currentView==='results')showMatches(currentView,currentFilter);else home();window.scrollTo(0,y);}else home();
 tick();
 }
 async function notifyScoreChanges(previous,next){
