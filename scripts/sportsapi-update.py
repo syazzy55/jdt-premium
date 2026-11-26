@@ -2,6 +2,10 @@
 import os
 import json
 import urllib.request
+import urllib.error
+import time
+from email.utils import parsedate_to_datetime
+from datetime import timezone
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -45,8 +49,30 @@ def fetch(kind):
                 "Accept": "application/json"
             }
         )
-        with urllib.request.urlopen(req, timeout=30) as response:
-            payload = json.load(response)
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    payload = json.load(response)
+                break
+            except urllib.error.HTTPError as exc:
+                if exc.code != 429 or attempt == 2:
+                    raise
+                delay = 30 * (2 ** attempt)
+                header = exc.headers.get("Retry-After")
+                if header:
+                    try:
+                        delay = max(delay, int(header))
+                    except ValueError:
+                        try:
+                            delay = max(delay, (parsedate_to_datetime(header) - datetime.now(timezone.utc)).total_seconds())
+                        except (ValueError, TypeError, OverflowError):
+                            pass
+                if delay > 120:
+                    print("API cooldown exceeds 120 seconds; preserving cached matches.")
+                    raise
+                print(f"API rate limited; retrying in {delay:.0f}s")
+                time.sleep(delay)
+        time.sleep(2)
 
         matches.extend(payload["data"])
 
