@@ -36,7 +36,7 @@ jobs:
               time.sleep(7)
               with urllib.request.urlopen(req,timeout=25) as res: return json.load(res).get('data')
           ids=list(dict.fromkeys(players(json.load(open('www/details.json')))))
-          for pid in sorted(ids,key=lambda p: profiles.get(p,{}).get('updated',0))[:4]:
+          for pid in sorted(ids,key=lambda p: (bool(profiles.get(p,{}).get('statistics')),profiles.get(p,{}).get('updated',0)))[:4]:
               try:
                   p=get('players/'+pid)
                   if not isinstance(p,dict): continue
@@ -44,8 +44,19 @@ jobs:
                   entry.update(profile=p,updated=time.time())
                   profiles[pid]=entry
                   try:
-                      stats=get('players/'+pid+'/statistics')
-                      if isinstance(stats,list): entry['statistics']=[s for s in stats if isinstance(s,dict) and s.get('type')=='overall' and (s.get('season') or {}).get('startYear')==2026]
+                      seasons=get('players/'+pid+'/seasons')
+                      candidates=[(g.get('league') or {},s) for g in (seasons or []) if isinstance(g,dict) for s in g.get('seasons',[]) if s.get('startYear')==2026 and 'overall' in s.get('types',[])]
+                      candidates.sort(key=lambda pair: pair[0].get('id')!=195890)
+                      if candidates:
+                          league,season=candidates[0]
+                          stats=get('players/'+pid+'/statistics?league='+str(league['id'])+'&season='+str(season['id'])+'&type=overall')
+                          if isinstance(stats,list):
+                              entry['statistics']=stats
+                          elif isinstance(stats,dict):
+                              entry['statistics']=[stats if 'statistics' in stats else {'league':league,'season':season,'type':'overall','statistics':stats}]
+                          print('Statistics OK',pid,league['id'],season['id'])
+                      else:
+                          print('No current season',pid)
                   except urllib.error.HTTPError as e:
                       print('Statistics',pid,e.code, e.read().decode('utf-8',errors='replace')[:300])
                       if e.code in (401,403,429): break
