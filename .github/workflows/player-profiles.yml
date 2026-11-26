@@ -35,8 +35,15 @@ jobs:
               req=urllib.request.Request('https://api.sportsapi.app/v2/'+route,headers={'Authorization':'Bearer '+os.environ['SPORTSAPI_KEY'],'Accept':'application/json'})
               time.sleep(7)
               with urllib.request.urlopen(req,timeout=25) as res: return json.load(res).get('data')
-          ids=list(dict.fromkeys(players(json.load(open('www/details.json')))))
-          for pid in sorted(ids,key=lambda p: (bool(profiles.get(p,{}).get('statistics')),profiles.get(p,{}).get('updated',0)))[:4]:
+          details=json.load(open('www/details.json'))
+          ids=list(dict.fromkeys(players(details)))
+          jdt=set()
+          for match in details.values():
+              for side in ('home','away'):
+                  if (match.get('fixture',{}).get(side) or {}).get('id')==210860:
+                      jdt.update(players((match.get('lineups') or {}).get(side)))
+          print('JDT lineup players:',len(jdt))
+          for pid in sorted(ids,key=lambda p: (p not in jdt, bool(profiles.get(p,{}).get('statistics')),profiles.get(p,{}).get('updated',0)))[:4]:
               try:
                   p=get('players/'+pid)
                   if not isinstance(p,dict): continue
@@ -51,9 +58,9 @@ jobs:
                           league,season=candidates[0]
                           stats=get('players/'+pid+'/statistics?league='+str(league['id'])+'&season='+str(season['id'])+'&type=overall')
                           if isinstance(stats,list):
-                              entry['statistics']=stats
+                              entry['statistics']=[dict(s,league=league,season=season,type='overall') for s in stats if isinstance(s,dict)]
                           elif isinstance(stats,dict):
-                              entry['statistics']=[stats if 'statistics' in stats else {'league':league,'season':season,'type':'overall','statistics':stats}]
+                              entry['statistics']=[dict(stats,league=league,season=season,type='overall') if 'statistics' in stats else {'league':league,'season':season,'type':'overall','statistics':stats}]
                           print('Statistics OK',pid,league['id'],season['id'])
                       else:
                           print('No current season',pid)
