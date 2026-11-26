@@ -1,0 +1,69 @@
+name: JDT Player Profiles Update
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '43 20 * * *'
+  push:
+    paths:
+      - '.github/workflows/player-profiles.yml'
+permissions:
+  contents: write
+concurrency:
+  group: player-profiles
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch player profiles
+        env:
+          SPORTSAPI_KEY: ${{ secrets.SPORTSAPI_KEY }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request, urllib.error, time
+          from pathlib import Path
+          path=Path('www/player-profiles.json')
+          profiles=json.loads(path.read_text()) if path.exists() else {}
+          def players(x):
+              if isinstance(x,dict):
+                  p=x.get('player')
+                  if isinstance(p,dict) and p.get('id'): yield str(p['id'])
+                  for v in x.values(): yield from players(v)
+              elif isinstance(x,list):
+                  for v in x: yield from players(v)
+          def get(route):
+              req=urllib.request.Request('https://api.sportsapi.app/v2/'+route,headers={'Authorization':'Bearer '+os.environ['SPORTSAPI_KEY'],'Accept':'application/json'})
+              with urllib.request.urlopen(req,timeout=25) as res: return json.load(res).get('data')
+          ids=list(dict.fromkeys(players(json.load(open('www/details.json')))))
+          for pid in sorted(ids,key=lambda p: profiles.get(p,{}).get('updated',0))[:40]:
+              try:
+                  p=get('players/'+pid)
+                  if not isinstance(p,dict): continue
+                  entry=profiles.get(pid,{})
+                  entry.update(profile=p,updated=time.time())
+                  profiles[pid]=entry
+                  try:
+                      stats=get('players/'+pid+'/statistics')
+                      if isinstance(stats,list): entry['statistics']=[s for s in stats if isinstance(s,dict) and s.get('type')=='overall' and (s.get('season') or {}).get('startYear')==2026]
+                  except urllib.error.HTTPError as e:
+                      print('Statistics',pid,e.code)
+                      if e.code in (401,403,429): break
+                  print('Updated',pid)
+              except urllib.error.HTTPError as e:
+                  print('Profile',pid,e.code)
+                  if e.code in (401,403,429): break
+              time.sleep(.3)
+          path.write_text(json.dumps(profiles,ensure_ascii=False,separators=(',',':')))
+          print('Saved profiles:',len(profiles))
+          if not profiles: raise SystemExit('No profiles available')
+          PY
+      - name: Save profiles
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add www/player-profiles.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh player profiles"
+            git pull --rebase
+            git push
+          fi
