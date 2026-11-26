@@ -1,4 +1,4 @@
-import json, os, urllib.request, urllib.error
+import json, os, time, urllib.request, urllib.error
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
@@ -25,6 +25,35 @@ for m in matches:
         except (OSError,ValueError,KeyError) as e: print(ident,name,type(e).__name__)
     entry['finished']=entry.get('fixture',{}).get('status',{}).get('type')=='finished'
     entry['updated']=now.isoformat()
+# Backfill older finished matches gradually, prioritizing missing lineups.
+recent=sorted(data['results'],key=lambda m:(m.get('date',''),m.get('time','')),reverse=True)
+attempts=0
+for m in recent:
+    if attempts>=3: break
+    if not m.get('id'): continue
+    ident=str(m['id'])
+    entry=cache.setdefault(ident,{})
+    lineup=entry.get('lineups') or {}
+    if isinstance(lineup,dict) and any(p.get('rating') is not None or (p.get('statistics') or {}).get('rating') is not None for side in ('home','away') for p in (lineup.get(side) or {}).get('players',[])): continue
+    try:
+        last=datetime.fromisoformat(entry.get('lineupAttempt',''))
+        if now-last<timedelta(hours=24): continue
+    except (ValueError,TypeError): pass
+    attempts+=1
+    time.sleep(3)
+    try:
+        req=urllib.request.Request('https://api.sportsapi.app/v2/fixtures/'+ident+'/lineups',headers={'Authorization':'Bearer '+key,'Accept':'application/json'})
+        with urllib.request.urlopen(req,timeout=20) as res: value=json.load(res)['data']
+        entry['lineupAttempt']=now.isoformat()
+        if isinstance(value,dict) and any((value.get(side) or {}).get('players') for side in ('home','away')):
+            entry['lineups']=value
+            print(ident,'historical lineup OK')
+        else: print(ident,'historical lineup unavailable')
+    except urllib.error.HTTPError as e:
+        print(ident,'historical lineup',e.code)
+        if e.code in (401,403,429): break
+        entry['lineupAttempt']=now.isoformat()
+    except (OSError,ValueError,KeyError) as e: print(ident,'historical lineup',type(e).__name__)
 tmp=path.with_suffix('.tmp')
 tmp.write_text(json.dumps(cache,ensure_ascii=False,separators=(',',':')))
 tmp.replace(path)
