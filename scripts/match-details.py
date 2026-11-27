@@ -18,13 +18,20 @@ def record_cooldown(exc):
             except (ValueError, TypeError, OverflowError):
                 pass
     until = int(time.time() + delay + 1)
-    cooldown_file.write_text(json.dumps({"until": until}) + "\\n")
+    cooldown_file.write_text(json.dumps({"until": until}) + "\n")
     print("::warning::SportsAPI rate limited; deferred until " + datetime.fromtimestamp(until, timezone.utc).isoformat())
 
 def cooldown_active():
     if not cooldown_file.exists():
         return False
-    return json.loads(cooldown_file.read_text())["until"] > time.time()
+    raw = cooldown_file.read_text().strip()
+    if raw.endswith("\\n"):
+        raw = raw[:-2].rstrip()
+    try:
+        return json.loads(raw)["until"] > time.time()
+    except (ValueError, KeyError, TypeError):
+        print("::warning::Invalid cooldown file; API requests deferred for safety.")
+        return True
 
 if cooldown_active():
     print("::notice::SportsAPI cooldown active; cached data retained.")
