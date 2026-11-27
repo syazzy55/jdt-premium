@@ -167,6 +167,58 @@ for match in upcoming + recent:
         if old and old.get("status") != "notstarted":
             fixtures.pop(k, None)
 
+# Recover missing historical IDs using documented date/league endpoint.
+# Bound additional requests; only attach IDs to unambiguous score/venue matches.
+from urllib.parse import urlencode
+league_ids = {name: ident for ident, name in LEAGUES.items()}
+pending = sorted((x for x in results.values() if not x.get("id")
+                  and x.get("competition") in league_ids),
+                 key=lambda x: x["date"], reverse=True)
+# Rotate unmatched dates so unavailable historical coverage cannot block older games.
+offset = int(data.get("historyRecoveryOffset", 0))
+if pending:
+    offset %= len(pending)
+    batch = (pending[offset:] + pending[:offset])[:2]
+    for old in batch:
+        url = BASE + "/fixtures?" + urlencode({
+            "date": old["date"], "league": league_ids[old["competition"]],
+            "tz": "Asia/Kuala_Lumpur"})
+        try:
+            time.sleep(3)
+            req = urllib.request.Request(url, headers={
+                "Authorization": f"Bearer {API_KEY}", "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=30) as response:
+                rows = json.load(response)["data"]
+        except urllib.error.HTTPError as exc:
+            print("History recovery HTTP", exc.code)
+            if exc.code == 429:
+                break
+            continue
+        except (urllib.error.URLError, TimeoutError, ValueError, KeyError) as exc:
+            print("History recovery unavailable:", type(exc).__name__)
+            continue
+        candidates = []
+        for row in rows:
+            if TEAM_ID not in (row["home"]["id"], row["away"]["id"]):
+                continue
+            if row["status"]["type"] != "finished":
+                continue
+            try:
+                item = convert(row)
+            except (ValueError, KeyError, TypeError):
+                continue
+            if all(item.get(k) == old.get(k) for k in
+                   ("date", "competition", "venue", "jdtScore", "opponentScore")):
+                candidates.append(item)
+        if len(candidates) == 1 and not any(
+                x.get("id") == candidates[0]["id"] for x in results.values()):
+            old["id"] = candidates[0]["id"]
+            print("Historical ID recovered:", old["date"], old["id"])
+        else:
+            print("Historical ID not uniquely matched:", old["date"])
+    data["historyRecoveryOffset"] = offset + len(batch)
+print("Historical results still missing ID:", sum(not x.get("id") for x in results.values()))
+
 data["fixtures"] = sorted(
     fixtures.values(),
     key=lambda x: (x["date"], x.get("time", ""))
