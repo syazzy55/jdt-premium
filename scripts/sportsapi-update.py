@@ -35,6 +35,34 @@ LEAGUES = {
     278820: "Piala FA"
 }
 
+
+# Shared persistent API cooldown (UTC epoch seconds).
+from email.utils import parsedate_to_datetime
+cooldown_file = Path("www/api-cooldown.json")
+def record_cooldown(exc):
+    delay = 3600
+    header = exc.headers.get("Retry-After")
+    if header:
+        try:
+            delay = max(60, int(header))
+        except ValueError:
+            try:
+                delay = max(60, (parsedate_to_datetime(header) - datetime.now(timezone.utc)).total_seconds())
+            except (ValueError, TypeError, OverflowError):
+                pass
+    until = int(time.time() + delay + 1)
+    cooldown_file.write_text(json.dumps({"until": until}) + "\\n")
+    print("::warning::SportsAPI rate limited; deferred until " + datetime.fromtimestamp(until, timezone.utc).isoformat())
+
+def cooldown_active():
+    if not cooldown_file.exists():
+        return False
+    return json.loads(cooldown_file.read_text())["until"] > time.time()
+
+if cooldown_active():
+    print("::notice::SportsAPI cooldown active; cached data retained.")
+    raise SystemExit(0)
+
 def fetch(kind):
     matches = []
     for page in range(51):
@@ -49,29 +77,14 @@ def fetch(kind):
                 "Accept": "application/json"
             }
         )
-        for attempt in range(3):
-            try:
-                with urllib.request.urlopen(req, timeout=30) as response:
-                    payload = json.load(response)
-                break
-            except urllib.error.HTTPError as exc:
-                if exc.code != 429 or attempt == 2:
-                    raise
-                delay = 30 * (2 ** attempt)
-                header = exc.headers.get("Retry-After")
-                if header:
-                    try:
-                        delay = max(delay, int(header))
-                    except ValueError:
-                        try:
-                            delay = max(delay, (parsedate_to_datetime(header) - datetime.now(timezone.utc)).total_seconds())
-                        except (ValueError, TypeError, OverflowError):
-                            pass
-                if delay > 120:
-                    print("API cooldown exceeds 120 seconds; preserving cached matches.")
-                    raise
-                print(f"API rate limited; retrying in {delay:.0f}s")
-                time.sleep(delay)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                payload = json.load(response)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429:
+                record_cooldown(exc)
+                raise SystemExit(0)
+            raise
         time.sleep(2)
 
         matches.extend(payload["data"])
@@ -196,6 +209,7 @@ if pending and not data.get("historyRecoveryForbidden"):
                 print("History endpoint forbidden; automatic recovery paused until access is verified.")
                 break
             if exc.code == 429:
+                record_cooldown(exc)
                 break
             continue
         except (urllib.error.URLError, TimeoutError, ValueError, KeyError) as exc:
