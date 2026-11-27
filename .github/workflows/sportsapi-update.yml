@@ -20,10 +20,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -48,6 +48,8 @@ jobs:
                   continue
               if start - timedelta(minutes=30) <= now <= start + timedelta(hours=3):
                   run = True
+          print(f'Match window: {now.isoformat()} | event={os.environ["EVENT"]} | schedule={os.environ["SCHEDULE"]}')
+          print('Decision: ' + ('Update matches' if run else 'Skip: outside match window'))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               print('run=' + str(run).lower(), file=f)
           PY
