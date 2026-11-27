@@ -9,14 +9,19 @@ data=json.loads(Path('www/matches.json').read_text())
 now=datetime.now(timezone.utc)
 key=os.environ['SPORTSAPI_KEY']
 matches=[m for m in data['results'][:5]+data['fixtures'][:2] if m.get('id')]
+print('Historical results missing fixture ID:', sum(not m.get('id') for m in data['results']))
+requests=0
+budget=8
 rate_limited=False
 for m in matches:
-    if rate_limited: break
+    if rate_limited or requests>=budget: break
     ident=str(m['id'])
     entry=cache.setdefault(ident,{})
     if m.get('status')=='finished' and all(k in entry for k in ('fixture','events','lineups','statistics','h2h')) and entry.get('finished'): continue
     for name,suffix in [('fixture',''),('events','/events'),('lineups','/lineups'),('statistics','/statistics'),('h2h','/h2h')]:
         if m.get('status')=='finished' and entry.get('finished') and entry.get(name) is not None: continue
+        if requests>=budget: break
+        requests+=1
         time.sleep(3)
         try:
             req=urllib.request.Request('https://api.sportsapi.app/v2/fixtures/'+ident+suffix,headers={'Authorization':'Bearer '+key,'Accept':'application/json'})
@@ -35,7 +40,7 @@ for m in matches:
 recent=sorted(data['results'],key=lambda m:(m.get('date',''),m.get('time','')),reverse=True)
 attempts=0
 for m in recent:
-    if rate_limited or attempts>=3: break
+    if rate_limited or attempts>=3 or requests>=budget: break
     if not m.get('id'): continue
     ident=str(m['id'])
     entry=cache.setdefault(ident,{})
@@ -46,6 +51,7 @@ for m in recent:
         if now-last<timedelta(hours=24): continue
     except (ValueError,TypeError): pass
     attempts+=1
+    requests+=1
     time.sleep(3)
     try:
         req=urllib.request.Request('https://api.sportsapi.app/v2/fixtures/'+ident+'/lineups',headers={'Authorization':'Bearer '+key,'Accept':'application/json'})
@@ -60,6 +66,7 @@ for m in recent:
         if e.code in (401,403,429): break
         entry['lineupAttempt']=now.isoformat()
     except (OSError,ValueError,KeyError) as e: print(ident,'historical lineup',type(e).__name__)
+print('Match detail API requests:', requests, '/', budget)
 tmp=path.with_suffix('.tmp')
 tmp.write_text(json.dumps(cache,ensure_ascii=False,separators=(',',':')))
 tmp.replace(path)
