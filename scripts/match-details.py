@@ -2,6 +2,34 @@ import json, os, time, urllib.request, urllib.error
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
+
+# Shared persistent API cooldown (UTC epoch seconds).
+from email.utils import parsedate_to_datetime
+cooldown_file = Path("www/api-cooldown.json")
+def record_cooldown(exc):
+    delay = 3600
+    header = exc.headers.get("Retry-After")
+    if header:
+        try:
+            delay = max(60, int(header))
+        except ValueError:
+            try:
+                delay = max(60, (parsedate_to_datetime(header) - datetime.now(timezone.utc)).total_seconds())
+            except (ValueError, TypeError, OverflowError):
+                pass
+    until = int(time.time() + delay + 1)
+    cooldown_file.write_text(json.dumps({"until": until}) + "\\n")
+    print("::warning::SportsAPI rate limited; deferred until " + datetime.fromtimestamp(until, timezone.utc).isoformat())
+
+def cooldown_active():
+    if not cooldown_file.exists():
+        return False
+    return json.loads(cooldown_file.read_text())["until"] > time.time()
+
+if cooldown_active():
+    print("::notice::SportsAPI cooldown active; cached data retained.")
+    raise SystemExit(0)
+
 path=Path('www/details.json')
 try: cache=json.loads(path.read_text())
 except FileNotFoundError: cache={}
@@ -30,6 +58,7 @@ for m in matches:
             print(ident,name,'OK')
         except urllib.error.HTTPError as e:
             print(ident,name,e.code)
+            if e.code == 429: record_cooldown(e)
             if e.code in (401,403,429):
                 rate_limited=True
                 break
@@ -63,6 +92,7 @@ for m in recent:
         else: print(ident,'historical lineup unavailable')
     except urllib.error.HTTPError as e:
         print(ident,'historical lineup',e.code)
+        if e.code == 429: record_cooldown(e)
         if e.code in (401,403,429): break
         entry['lineupAttempt']=now.isoformat()
     except (OSError,ValueError,KeyError) as e: print(ident,'historical lineup',type(e).__name__)
