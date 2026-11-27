@@ -65,12 +65,13 @@ jobs:
         run: python scripts/match-details.py
 
       - name: Save updated matches
-        if: steps.window.outputs.run == 'true'
+        if: always() && steps.window.outputs.run == 'true'
         run: |
           git config user.name "JDT Smart Update"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add www/matches.json www/details.json
+          if [ -f www/api-cooldown.json ]; then git add www/api-cooldown.json; fi
 
           if git diff --cached --quiet; then
             echo "No changes detected"
