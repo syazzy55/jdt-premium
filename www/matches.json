@@ -2,7 +2,7 @@
   "season": "2026/2027",
   "team": "Johor Darul Ta'zim",
   "timezone": "Asia/Kuala_Lumpur",
-  "updated": "2026-11-26",
+  "updated": "2026-11-27",
   "fixtures": [
     {
       "id": 210850,
@@ -410,5 +410,5 @@
     "https://matchcalendar.football/team/johor-darul-takzim/fixtures/",
     "https://api.sportsapi.app/v2"
   ],
-  "updatedAt": "2026-11-26T15:28:47.428862+08:00"
+  "updatedAt": "2026-11-27T09:27:43.213412+08:00"
 }
