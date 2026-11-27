@@ -176,7 +176,7 @@ pending = sorted((x for x in results.values() if not x.get("id")
                  key=lambda x: x["date"], reverse=True)
 # Rotate unmatched dates so unavailable historical coverage cannot block older games.
 offset = int(data.get("historyRecoveryOffset", 0))
-if pending:
+if pending and not data.get("historyRecoveryForbidden"):
     offset %= len(pending)
     batch = (pending[offset:] + pending[:offset])[:2]
     for old in batch:
@@ -191,6 +191,10 @@ if pending:
                 rows = json.load(response)["data"]
         except urllib.error.HTTPError as exc:
             print("History recovery HTTP", exc.code)
+            if exc.code == 403:
+                data["historyRecoveryForbidden"] = True
+                print("History endpoint forbidden; automatic recovery paused until access is verified.")
+                break
             if exc.code == 429:
                 break
             continue
@@ -217,6 +221,8 @@ if pending:
         else:
             print("Historical ID not uniquely matched:", old["date"])
     data["historyRecoveryOffset"] = offset + len(batch)
+if data.get("historyRecoveryForbidden"):
+    print("Historical date endpoint paused; normal team fixture updates remain active.")
 print("Historical results still missing ID:", sum(not x.get("id") for x in results.values()))
 
 data["fixtures"] = sorted(
